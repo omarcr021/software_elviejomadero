@@ -2,12 +2,20 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using software_elviejomadero.Models;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace software_elviejomadero.Controllers;
 
 public class HomeController : Controller
 {
+    [Authorize]
     public IActionResult Index()
     {
+        if (User.IsInRole("Administrador"))
+        {
+            return RedirectToAction("Index", "Administration");
+        }
+
         return View();
     }
 

@@ -1,8 +1,45 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Panel Operativo";
+    var userRole = User.IsInRole("Mozo") ? "Mozo" :
+                   User.IsInRole("Cocinero") ? "Cocinero" :
+                   User.IsInRole("Recepcionista") ? "Recepcionista" :
+                   User.IsInRole("Repartidor") ? "Repartidor" : "Personal Operativo";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row justify-content-center py-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-center">
+            <div class="mb-3">
+                <div class="d-inline-flex p-3 rounded-circle bg-madero-soft text-madero mb-2">
+                    <i class="bi bi-person-badge fs-1"></i>
+                </div>
+            </div>
+            <span class="badge bg-madero-soft text-madero rounded-pill px-3 py-1 align-self-center mb-2">
+                Rol Activo: @userRole
+            </span>
+            <h2 class="fw-bold text-madero-dark mb-2">Bienvenido, @User.Identity?.Name</h2>
+            <p class="text-muted mb-4 lead">
+                Has iniciado sesión correctamente como colaborador de <strong>El Viejo Madero</strong>.
+            </p>
+
+            <div class="alert alert-light border rounded-4 text-start small p-3 mb-4 d-flex align-items-center gap-3 bg-light">
+                <div class="bg-madero-soft text-madero p-2 rounded-circle">
+                    <i class="bi bi-clock-history fs-5"></i>
+                </div>
+                <div>
+                    <strong class="d-block text-madero-dark">Turno de Operación Habilitado</strong>
+                    <span class="text-muted">Tu sesión se encuentra activa en el sistema. Consulta con la administración para la asignación de comandas y pedidos de servicio.</span>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
+                        <i class="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>

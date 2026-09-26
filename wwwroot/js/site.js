@@ -1,4 +1,14 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+// Scripts globales para El Viejo Madero
 
-// Write your JavaScript code.
+document.addEventListener('DOMContentLoaded', function () {
+    // Auto-dismiss alertas después de 5 segundos
+    const alerts = document.querySelectorAll('.alert-dismissible');
+    alerts.forEach(function (alert) {
+        setTimeout(function () {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            if (bsAlert) {
+                bsAlert.close();
+            }
+        }, 5000);
+    });
+});

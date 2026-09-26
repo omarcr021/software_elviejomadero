@@ -1,31 +1,236 @@
-html {
-  font-size: 14px;
-}
+/* ========================================================
+   Identidad Visual "El Viejo Madero" - Sprint 1
+   Paleta: Marrón oscuro, Madera/Brasa, Crema/Beige, Dorado
+   ======================================================== */
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+:root {
+    --madero-dark: #231612;
+    --madero-primary: #4a2818;
+    --madero-hover: #361c10;
+    --madero-accent: #c86d38;
+    --madero-accent-light: #e68d55;
+    --madero-gold: #d4a373;
+    --madero-bg: #f8f6f2;
+    --madero-card-bg: #ffffff;
+    --madero-soft: #f4ece4;
+    --madero-border: #e8ded4;
+    --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: var(--font-main);
+    background-color: var(--madero-bg);
+    color: #2d2420;
+    -webkit-font-smoothing: antialiased;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* --- Navbar & Branding --- */
+.bg-madero {
+    background: linear-gradient(135deg, #2b1811 0%, #3e2217 100%);
+    border-bottom: 2px solid var(--madero-accent);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--madero-accent) 0%, #e67e22 100%);
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.text-madero-light {
+    color: #f7ede6 !important;
+}
+
+.text-madero-dark {
+    color: var(--madero-dark) !important;
+}
+
+.text-madero {
+    color: var(--madero-primary) !important;
+}
+
+.bg-madero-soft {
+    background-color: var(--madero-soft) !important;
+}
+
+.avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--madero-accent);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.avatar-circle-sm {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.text-role-badge {
+    font-size: 0.72rem;
+    color: var(--madero-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+/* --- Botones Madero --- */
+.btn-madero {
+    background-color: var(--madero-primary);
+    border-color: var(--madero-primary);
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-madero:hover, .btn-madero:focus {
+    background-color: var(--madero-hover);
+    border-color: var(--madero-hover);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(54, 28, 16, 0.25);
+}
+
+.btn-outline-madero {
+    border-color: var(--madero-primary);
+    color: var(--madero-primary);
+    font-weight: 600;
+    background: transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-outline-madero:hover {
+    background-color: var(--madero-primary);
+    color: #ffffff;
+}
+
+.btn-madero-accent {
+    background-color: var(--madero-accent);
+    border-color: var(--madero-accent);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.btn-madero-accent:hover {
+    background-color: #b05c2d;
+    color: #ffffff;
+}
+
+/* --- Login Page Especial --- */
+.bg-login-page {
+    background: linear-gradient(135deg, #1f130e 0%, #2f1910 50%, #3f2215 100%);
+}
+
+.card-login-wrapper {
+    background-color: #ffffff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+.login-brand-panel {
+    background: linear-gradient(135deg, rgba(35, 22, 18, 0.96) 0%, rgba(68, 36, 23, 0.94) 100%),
+                url('https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1000&auto=format&fit=crop') center/cover;
+    position: relative;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-pill {
+    background-color: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+}
+
+.bg-white-15 {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.feature-icon-box {
+    width: 42px;
+    height: 42px;
+}
+
+.check-madero:checked {
+    background-color: var(--madero-primary);
+    border-color: var(--madero-primary);
+}
+
+/* --- Admin Tabs --- */
+.admin-tabs .nav-link {
+    color: #5c5049;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.5rem 1.25rem;
+    margin-right: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.admin-tabs .nav-link:hover {
+    color: var(--madero-primary);
+    background-color: var(--madero-soft);
+}
+
+.admin-tabs .nav-link.active {
+    background-color: var(--madero-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(74, 40, 24, 0.25);
+}
+
+/* --- Tarjetas de Platos --- */
+.dish-card {
+    transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+    background: #ffffff;
+    border: 1px solid var(--madero-border) !important;
+}
+
+.dish-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.07) !important;
+}
+
+.dish-card-inactive {
+    background-color: #faf9f7;
+    opacity: 0.75;
+    border-style: dashed !important;
+}
+
+.category-pill-indicator {
+    display: inline-block;
+    width: 6px;
+    height: 24px;
+    background: var(--madero-accent);
+    border-radius: 4px;
+}
+
+/* --- Tablas y Formularios --- */
+.custom-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.custom-table tbody tr:hover {
+    background-color: var(--madero-soft);
+}
+
+.border-dashed {
+    border: 2px dashed #d8ceca !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--madero-accent);
+    box-shadow: 0 0 0 0.25rem rgba(200, 109, 56, 0.2);
 }
