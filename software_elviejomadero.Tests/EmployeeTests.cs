@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using software_elviejomadero.Controllers;
 using software_elviejomadero.Data;
 using software_elviejomadero.Models;
 using software_elviejomadero.Services.Implementations;
+using software_elviejomadero.Services.Interfaces;
 using software_elviejomadero.ViewModels;
 using Xunit;
 
@@ -253,6 +257,36 @@ namespace software_elviejomadero.Tests
 
             // Assert
             Assert.Equal(expectedBase, result);
+        }
+
+        // 14b. Verificación de Model Binding en EmployeeController (Prefijo y Directo)
+        [Fact]
+        public async Task EmployeeController_Create_BindsPrefixedModelCorrectly()
+        {
+            // Arrange
+            var mockService = new Mock<IEmployeeService>();
+            mockService.Setup(s => s.RegisterEmployeeAsync(It.IsAny<CreateEmployeeViewModel>()))
+                .ReturnsAsync((true, null, "mlopez"));
+
+            var controller = new EmployeeController(mockService.Object);
+            var tempData = new Mock<ITempDataDictionary>();
+            controller.TempData = tempData.Object;
+
+            var prefixedModel = new CreateEmployeeViewModel
+            {
+                FullName = "María López",
+                DNI = "12345678",
+                Phone = "987654321",
+                Role = "Mozo",
+                InitialPassword = "Password123*"
+            };
+
+            // Act
+            var result = await controller.Create(prefixedModel);
+
+            // Assert
+            mockService.Verify(s => s.RegisterEmployeeAsync(It.Is<CreateEmployeeViewModel>(m => m.FullName == "María López")), Times.Once);
+            Assert.IsType<RedirectToActionResult>(result);
         }
     }
 }

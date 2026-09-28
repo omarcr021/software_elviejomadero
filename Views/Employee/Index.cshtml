@@ -181,19 +181,19 @@
                 <div class="modal-body px-4 py-3">
                     <div class="mb-3">
                         <label asp-for="NewEmployee.FullName" class="form-label small fw-semibold text-secondary"></label>
-                        <input asp-for="NewEmployee.FullName" class="form-control" id="fullNameInput" placeholder="Ej: Juan Pérez García" required />
+                        <input asp-for="NewEmployee.FullName" name="FullName" class="form-control" id="fullNameInput" placeholder="Ej: Juan Pérez García" required />
                         <span asp-validation-for="NewEmployee.FullName" class="text-danger small"></span>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-6">
                             <label asp-for="NewEmployee.DNI" class="form-label small fw-semibold text-secondary"></label>
-                            <input asp-for="NewEmployee.DNI" class="form-control" maxlength="8" placeholder="8 dígitos" required />
+                            <input asp-for="NewEmployee.DNI" name="DNI" class="form-control" maxlength="8" placeholder="8 dígitos" required />
                             <span asp-validation-for="NewEmployee.DNI" class="text-danger small"></span>
                         </div>
                         <div class="col-6">
                             <label asp-for="NewEmployee.Phone" class="form-label small fw-semibold text-secondary"></label>
-                            <input asp-for="NewEmployee.Phone" class="form-control" maxlength="9" placeholder="9 dígitos" required />
+                            <input asp-for="NewEmployee.Phone" name="Phone" class="form-control" maxlength="9" placeholder="9 dígitos" required />
                             <span asp-validation-for="NewEmployee.Phone" class="text-danger small"></span>
                         </div>
                     </div>
@@ -204,14 +204,14 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light text-muted">@@</span>
-                            <input asp-for="NewEmployee.UserName" class="form-control bg-light font-monospace" id="generatedUserNameInput" readonly placeholder="Se autogenera al ingresar el nombre" />
+                            <input asp-for="NewEmployee.UserName" name="UserName" class="form-control bg-light font-monospace" id="generatedUserNameInput" readonly placeholder="Se autogenera al ingresar el nombre" />
                         </div>
                         <div class="form-text small text-muted">Formato: primera letra del nombre + primer apellido (ej: jperez).</div>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="NewEmployee.Role" class="form-label small fw-semibold text-secondary"></label>
-                        <select asp-for="NewEmployee.Role" class="form-select" required>
+                        <select asp-for="NewEmployee.Role" name="Role" class="form-select" required>
                             <option value="">Seleccione un rol...</option>
                             @foreach (var role in Model.AvailableRoles)
                             {
@@ -224,7 +224,7 @@
                     <div class="mb-3">
                         <label asp-for="NewEmployee.InitialPassword" class="form-label small fw-semibold text-secondary"></label>
                         <div class="input-group">
-                            <input asp-for="NewEmployee.InitialPassword" type="password" class="form-control" id="initialPassInput" placeholder="••••••••" required />
+                            <input asp-for="NewEmployee.InitialPassword" name="InitialPassword" type="password" class="form-control" id="initialPassInput" placeholder="••••••••" required />
                             <button class="btn btn-outline-secondary" type="button" id="toggleEmpPassBtn">
                                 <i class="bi bi-eye" id="empPassIcon"></i>
                             </button>
@@ -233,7 +233,7 @@
                     </div>
 
                     <div class="form-check form-switch mb-2">
-                        <input asp-for="NewEmployee.IsActive" class="form-check-input" type="checkbox" id="employeeActiveSwitch" checked />
+                        <input asp-for="NewEmployee.IsActive" name="IsActive" value="true" class="form-check-input" type="checkbox" id="employeeActiveSwitch" checked />
                         <label class="form-check-label small fw-medium text-secondary" for="employeeActiveSwitch">
                             Empleado activo (habilitado para iniciar sesión)
                         </label>
