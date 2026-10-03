@@ -1,9 +1,17 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using software_elviejomadero.Data;
 using software_elviejomadero.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Soporte automático para el puerto dinámico asignado por Render (variable de entorno PORT)
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 // 1. Cadena de conexión y DbContext con SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -46,12 +54,18 @@ builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IAuthentic
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IEmployeeService, software_elviejomadero.Services.Implementations.EmployeeService>();
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IDishService, software_elviejomadero.Services.Implementations.DishService>();
 
-// 5. Registrar MVC con Vistas
+// 5. Registrar MVC con Vistas y ForwardedHeaders para Reverse Proxy (Render)
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 var app = builder.Build();
 
-// 5. Inicializar Base de Datos, Roles y Datos Iniciales (Seed)
+// 6. Inicializar Base de Datos, Roles y Datos Iniciales (Seed)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -66,14 +80,19 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 6. Pipeline HTTP
+// 7. Pipeline HTTP
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
