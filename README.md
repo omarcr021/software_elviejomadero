@@ -99,7 +99,7 @@ dotnet test software_elviejomadero.Tests/software_elviejomadero.Tests.csproj
 Para propósitos de prueba y demostración del Sprint 1, el sistema crea automáticamente el usuario administrador inicial:
 
 - **Usuario:** `admin`
-- **Contraseña:** `Admin123*!`
+- **Contraseña:** Admin123*!``
 - **Rol:** `Administrador`
 - **Acceso:** Acceso irrestricto al Panel de Administración, Gestión de Carta y Empleados.
 

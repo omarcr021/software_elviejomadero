@@ -1,47 +1,392 @@
 /* ========================================================
-   Identidad Visual "El Viejo Madero" - Sprint 1
-   Paleta: Marrón oscuro, Madera/Brasa, Crema/Beige, Dorado
+   Identidad Visual "El Viejo Madero"
+   Paleta Prototipo: Marrón #58351f, Naranja #d47628, Crema #f8f4ed
    ======================================================== */
 
 :root {
-    --madero-dark: #231612;
-    --madero-primary: #4a2818;
-    --madero-hover: #361c10;
-    --madero-accent: #c86d38;
+    --madero-dark: #231710;
+    --madero-primary: #58351f;
+    --madero-hover: #462917;
+    --madero-accent: #d47628;
     --madero-accent-light: #e68d55;
     --madero-gold: #d4a373;
-    --madero-bg: #f8f6f2;
-    --madero-card-bg: #ffffff;
-    --madero-soft: #f4ece4;
-    --madero-border: #e8ded4;
-    --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --madero-bg: #f8f4ed;
+    --madero-card-bg: #fdfbf7;
+    --madero-soft: #f0e8dc;
+    --madero-border: #e6ddd2;
+    --font-serif: 'Georgia', 'Times New Roman', serif;
+    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-body {
+body, button, input, select, textarea {
     font-family: var(--font-main);
-    background-color: var(--madero-bg);
-    color: #2d2420;
+    color: var(--madero-dark);
     -webkit-font-smoothing: antialiased;
 }
 
-/* --- Navbar & Branding --- */
-.bg-madero {
-    background: linear-gradient(135deg, #2b1811 0%, #3e2217 100%);
-    border-bottom: 2px solid var(--madero-accent);
+body {
+    background-color: var(--madero-bg);
 }
 
-.brand-badge {
+.font-serif {
+    font-family: var(--font-serif) !important;
+}
+
+.bg-vm-cream {
+    background-color: var(--madero-bg) !important;
+}
+
+/* --- Topbar Prototipo --- */
+.vm-topbar {
+    background-color: #633b22;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+}
+
+.vm-topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.vm-topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.vm-logo-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background-color: var(--madero-accent);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--madero-accent) 0%, #e67e22 100%);
-    color: #ffffff;
-    font-size: 1.1rem;
+    letter-spacing: 0.02em;
 }
 
+.vm-brand-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.vm-brand-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #ffffff;
+}
+
+.vm-brand-role {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
+}
+
+.vm-logout-link {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    opacity: 0.92;
+    transition: opacity 0.15s ease;
+}
+
+.vm-logout-link:hover {
+    opacity: 1;
+    color: #ffffff;
+}
+
+/* --- Contenedor Principal & Administración --- */
+.vm-main-container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0.5rem 1.5rem;
+}
+
+.vm-admin-wrapper {
+    padding-top: 0.25rem;
+}
+
+.vm-admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.vm-page-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.85rem;
+    color: var(--madero-dark);
+    margin: 0 0 0.2rem 0;
+}
+
+.vm-page-subtitle {
+    font-size: 0.88rem;
+    color: #786d65;
+    margin: 0;
+}
+
+/* --- Segmented Control (Resumen | Carta | Empleados | Reportes) --- */
+.vm-segmented-tabs {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f0e8dc;
+    border: 1px solid #e2d7c8;
+    border-radius: 10px;
+    padding: 4px;
+    gap: 2px;
+}
+
+.vm-seg-tab {
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #6b5e54;
+    padding: 0.4rem 0.9rem;
+    border-radius: 7px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.vm-seg-tab:hover:not(.disabled) {
+    color: var(--madero-dark);
+}
+
+.vm-seg-tab.active {
+    background-color: #ffffff;
+    color: var(--madero-dark);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.vm-seg-tab.disabled {
+    color: #786d65;
+    cursor: default;
+}
+
+/* --- Tarjetas de Resumen Minimalistas --- */
+.vm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(200px, 240px));
+    gap: 0.9rem;
+}
+
+.vm-stat-box {
+    background-color: var(--madero-card-bg);
+    border: 1px solid var(--madero-border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.vm-stat-label {
+    font-size: 0.8rem;
+    color: #786d65;
+    font-weight: 500;
+}
+
+.vm-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+    line-height: 1.2;
+}
+
+/* --- Vista Carta (Tarjetas Agrupadas en 2 Columnas) --- */
+.vm-section-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.15rem;
+    gap: 1rem;
+}
+
+.vm-dishes-counter {
+    font-size: 0.86rem;
+    color: #786d65;
+    font-weight: 500;
+}
+
+.vm-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--madero-primary);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.48rem 0.95rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.vm-btn-primary:hover {
+    background-color: var(--madero-hover);
+    color: #ffffff;
+}
+
+.vm-category-block {
+    margin-bottom: 1.65rem;
+}
+
+.vm-category-heading {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--madero-dark);
+    margin: 0 0 0.75rem 0;
+}
+
+.vm-dish-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+}
+
+.vm-dish-item {
+    background-color: var(--madero-card-bg);
+    border: 1px solid var(--madero-border);
+    border-radius: 10px;
+    padding: 0.95rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    transition: border-color 0.15s ease;
+}
+
+.vm-dish-item:hover {
+    border-color: #d6c8b8;
+}
+
+.vm-dish-hidden {
+    opacity: 0.62;
+    background-color: #f6f2eb;
+}
+
+.vm-dish-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.vm-dish-title {
+    font-weight: 700;
+    font-size: 0.94rem;
+    color: #2c2018;
+    margin-bottom: 0.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vm-hidden-pill {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    background-color: #e6ddd2;
+    color: #5c5049;
+}
+
+.vm-dish-desc {
+    font-size: 0.79rem;
+    color: #84776e;
+    margin-bottom: 0.45rem;
+}
+
+.vm-dish-price {
+    font-weight: 700;
+    font-size: 0.86rem;
+    color: var(--madero-dark);
+}
+
+.vm-dish-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.vm-icon-btn {
+    background: transparent;
+    border: none;
+    color: #5c5049;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.vm-icon-btn:hover {
+    background-color: #efe7dc;
+    color: var(--madero-dark);
+}
+
+.vm-icon-btn-delete {
+    background-color: #fce8e6;
+    border: none;
+    color: #c53929;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.vm-icon-btn-delete:hover {
+    background-color: #f8d2ce;
+    color: #a52714;
+}
+
+.vm-empty-box {
+    background-color: var(--madero-card-bg);
+    border: 1px solid var(--madero-border);
+    border-radius: 10px;
+    padding: 2.5rem;
+    text-align: center;
+    color: #786d65;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .vm-stats-grid,
+    .vm-dish-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Clases compartidas para Empleados y Formularios --- */
 .text-madero-light {
     color: #f7ede6 !important;
 }
@@ -58,20 +403,6 @@ body {
     background-color: var(--madero-soft) !important;
 }
 
-.avatar-circle {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: var(--madero-accent);
-    color: white;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
 .avatar-circle-sm {
     width: 36px;
     height: 36px;
@@ -82,29 +413,18 @@ body {
     font-size: 0.95rem;
 }
 
-.text-role-badge {
-    font-size: 0.72rem;
-    color: var(--madero-gold);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-}
-
-/* --- Botones Madero --- */
 .btn-madero {
     background-color: var(--madero-primary);
     border-color: var(--madero-primary);
     color: #ffffff;
     font-weight: 600;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
 }
 
 .btn-madero:hover, .btn-madero:focus {
     background-color: var(--madero-hover);
     border-color: var(--madero-hover);
     color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(54, 28, 16, 0.25);
 }
 
 .btn-outline-madero {
@@ -112,7 +432,7 @@ body {
     color: var(--madero-primary);
     font-weight: 600;
     background: transparent;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
 }
 
 .btn-outline-madero:hover {
@@ -120,104 +440,6 @@ body {
     color: #ffffff;
 }
 
-.btn-madero-accent {
-    background-color: var(--madero-accent);
-    border-color: var(--madero-accent);
-    color: #ffffff;
-    font-weight: 600;
-}
-
-.btn-madero-accent:hover {
-    background-color: #b05c2d;
-    color: #ffffff;
-}
-
-/* --- Login Page Especial --- */
-.bg-login-page {
-    background: linear-gradient(135deg, #1f130e 0%, #2f1910 50%, #3f2215 100%);
-}
-
-.card-login-wrapper {
-    background-color: #ffffff;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
-}
-
-.login-brand-panel {
-    background: linear-gradient(135deg, rgba(35, 22, 18, 0.96) 0%, rgba(68, 36, 23, 0.94) 100%),
-                url('https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1000&auto=format&fit=crop') center/cover;
-    position: relative;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.brand-pill {
-    background-color: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
-    letter-spacing: 0.1em;
-    font-size: 0.85rem;
-}
-
-.bg-white-15 {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-.feature-icon-box {
-    width: 42px;
-    height: 42px;
-}
-
-.check-madero:checked {
-    background-color: var(--madero-primary);
-    border-color: var(--madero-primary);
-}
-
-/* --- Admin Tabs --- */
-.admin-tabs .nav-link {
-    color: #5c5049;
-    font-weight: 600;
-    border-radius: 999px;
-    padding: 0.5rem 1.25rem;
-    margin-right: 0.5rem;
-    transition: all 0.2s ease;
-}
-
-.admin-tabs .nav-link:hover {
-    color: var(--madero-primary);
-    background-color: var(--madero-soft);
-}
-
-.admin-tabs .nav-link.active {
-    background-color: var(--madero-primary);
-    color: #ffffff;
-    box-shadow: 0 2px 6px rgba(74, 40, 24, 0.25);
-}
-
-/* --- Tarjetas de Platos --- */
-.dish-card {
-    transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
-    background: #ffffff;
-    border: 1px solid var(--madero-border) !important;
-}
-
-.dish-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.07) !important;
-}
-
-.dish-card-inactive {
-    background-color: #faf9f7;
-    opacity: 0.75;
-    border-style: dashed !important;
-}
-
-.category-pill-indicator {
-    display: inline-block;
-    width: 6px;
-    height: 24px;
-    background: var(--madero-accent);
-    border-radius: 4px;
-}
-
-/* --- Tablas y Formularios --- */
 .custom-table tbody tr {
     transition: background-color 0.15s ease;
 }
@@ -232,5 +454,177 @@ body {
 
 .form-control:focus, .form-select:focus {
     border-color: var(--madero-accent);
-    box-shadow: 0 0 0 0.25rem rgba(200, 109, 56, 0.2);
+    box-shadow: 0 0 0 0.2rem rgba(212, 118, 40, 0.2);
+}
+
+/* =========================================================
+   DISEÑO VENTANA EMERGENTE (MODAL AGREGAR / EDITAR PLATO)
+   ========================================================= */
+.vm-modal-dialog {
+    max-width: 510px;
+}
+
+.vm-modal-card {
+    background-color: #fdfaf5;
+    border: 1px solid #e6dfd5;
+    border-radius: 14px;
+    box-shadow: 0 22px 48px rgba(28, 16, 8, 0.28);
+    overflow: hidden;
+}
+
+.vm-modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #ece5db;
+    background-color: #fdfaf5;
+}
+
+.vm-modal-title {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #241710;
+    margin: 0;
+}
+
+.vm-modal-body {
+    padding: 20px 24px 18px;
+    background-color: #fdfaf5;
+}
+
+.vm-field-group {
+    margin-bottom: 16px;
+}
+
+.vm-modal-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #38261b;
+    margin-bottom: 6px;
+}
+
+.vm-modal-input,
+.vm-modal-textarea,
+.vm-modal-select {
+    width: 100%;
+    background-color: #f6f1e9;
+    border: 1px solid #e2d9cc;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.88rem;
+    color: #241710;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vm-modal-textarea {
+    resize: vertical;
+    min-height: 76px;
+}
+
+.vm-modal-input:focus,
+.vm-modal-textarea:focus,
+.vm-modal-select:focus {
+    outline: none;
+    background-color: #fffdf9;
+    border-color: #c8874b;
+    box-shadow: 0 0 0 3px rgba(212, 118, 40, 0.15);
+}
+
+.vm-modal-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.15fr;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 576px) {
+    .vm-modal-row-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.vm-checkbox-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: #2c1d13;
+    user-select: none;
+    margin-top: 2px;
+}
+
+.vm-checkbox-orange {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 17px;
+    height: 17px;
+    border-radius: 4px;
+    border: 1.5px solid #cbbba8;
+    background-color: #f6f1e9;
+    cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.vm-checkbox-orange:checked {
+    background-color: #d47628;
+    border-color: #d47628;
+}
+
+.vm-checkbox-orange:checked::after {
+    content: "";
+    width: 5px;
+    height: 9px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+}
+
+.vm-modal-footer {
+    padding: 14px 24px 18px;
+    border-top: 1px solid #ece5db;
+    background-color: #fdfaf5;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.vm-btn-cancel {
+    background-color: #f5efe6;
+    border: 1px solid #dfd5c7;
+    color: #38261b;
+    font-weight: 600;
+    font-size: 0.84rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.vm-btn-cancel:hover {
+    background-color: #ebe2d5;
+    color: #241710;
+}
+
+.vm-btn-save {
+    background-color: #3d1e10;
+    border: 1px solid #3d1e10;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.84rem;
+    padding: 8px 18px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.vm-btn-save:hover {
+    background-color: #542b18;
+    border-color: #542b18;
+    color: #ffffff;
 }

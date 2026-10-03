@@ -29,6 +29,9 @@ namespace software_elviejomadero.ViewModels
         [Display(Name = "Categoría")]
         public int CategoryId { get; set; }
 
+        [Display(Name = "Disponible en la carta")]
+        public bool IsActive { get; set; } = true;
+
         public IEnumerable<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
     }
 
@@ -90,5 +93,6 @@ namespace software_elviejomadero.ViewModels
         public List<CategoryGroupViewModel> CategoryGroups { get; set; } = new();
         public int TotalDishesCount { get; set; }
         public int ActiveDishesCount { get; set; }
+        public IEnumerable<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
     }
 }

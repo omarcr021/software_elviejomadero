@@ -1,191 +1,163 @@
 @model software_elviejomadero.ViewModels.DishListViewModel
 
 @{
-    ViewData["Title"] = "Gestión de Carta";
+    ViewData["Title"] = "Carta";
 }
 
-<!-- Header de Administración con navegación -->
-<div class="admin-header bg-white rounded-4 p-4 shadow-sm mb-4 border">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3">
+<div class="vm-admin-wrapper">
+    <!-- Encabezado de Administración y Pestañas Segmentadas -->
+    <div class="vm-admin-header">
         <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-madero-soft text-madero fw-medium rounded-pill px-3 py-1">Administración</span>
-                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
-                    <i class="bi bi-book-half small me-1"></i> Menú y Carta
-                </span>
-            </div>
-            <h1 class="h3 fw-bold text-madero-dark mt-2 mb-1">Administración</h1>
-            <p class="text-muted mb-0">Operación, carta, empleados y resultados de El Viejo Madero.</p>
+            <h1 class="vm-page-title">Administración</h1>
+            <p class="vm-page-subtitle">Operación, carta, empleados y resultados de El Viejo Madero.</p>
         </div>
-        <div class="d-flex gap-2">
-            <a asp-action="Create" class="btn btn-madero rounded-pill px-4 shadow-sm">
-                <i class="bi bi-plus-lg me-1"></i> Agregar plato
-            </a>
+
+        <div class="vm-segmented-tabs">
+            <a class="vm-seg-tab" asp-controller="Administration" asp-action="Index">Resumen</a>
+            <a class="vm-seg-tab active" asp-controller="Dish" asp-action="Index">Carta</a>
+            <a class="vm-seg-tab" asp-controller="Employee" asp-action="Index">Empleados</a>
         </div>
     </div>
 
-    <!-- Navegación por Pestañas / Tabs -->
-    <ul class="nav nav-pills admin-tabs pt-2 border-top">
-        <li class="nav-item">
-            <a class="nav-link" asp-controller="Administration" asp-action="Index">
-                <i class="bi bi-speedometer2 me-1"></i> Resumen
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" asp-controller="Dish" asp-action="Index">
-                <i class="bi bi-journal-text me-1"></i> Carta
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" asp-controller="Employee" asp-action="Index">
-                <i class="bi bi-people me-1"></i> Empleados
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link disabled text-muted opacity-50" href="#" tabindex="-1" aria-disabled="true">
-                <i class="bi bi-bar-chart me-1"></i> Reportes
-            </a>
-        </li>
-    </ul>
-</div>
-
-<!-- Barra de Resumen de Carta -->
-<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 bg-white p-3 rounded-4 border shadow-sm">
-    <div class="d-flex align-items-center gap-2">
-        <div class="badge-icon-box bg-madero-soft text-madero rounded-3 p-2">
-            <i class="bi bi-card-checklist fs-5"></i>
-        </div>
-        <div>
-            <h2 class="h5 fw-bold text-madero-dark mb-0">Carta Gastronómica</h2>
-            <span class="text-muted small">
-                <strong>@Model.TotalDishesCount</strong> platos en la carta &bull; 
-                <span class="text-success fw-medium">@Model.ActiveDishesCount visibles para toma de pedidos</span>
-            </span>
-        </div>
+    <!-- Barra Superior de Carta: Contador + Botón Agregar plato (abre Modal) -->
+    <div class="vm-section-bar">
+        <span class="vm-dishes-counter">@Model.TotalDishesCount platos en la carta</span>
+        <button type="button" class="vm-btn-primary" data-bs-toggle="modal" data-bs-target="#addDishModal">
+            <i class="bi bi-plus-lg me-1"></i> Agregar plato
+        </button>
     </div>
-    <a asp-action="Create" class="btn btn-outline-madero btn-sm rounded-pill px-3">
-        <i class="bi bi-plus-circle me-1"></i> Nuevo plato
-    </a>
-</div>
 
-<!-- Contenedor de Platos Agrupados por Categoría -->
-@if (!Model.CategoryGroups.Any(g => g.Dishes.Any()))
-{
-    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
-        <i class="bi bi-egg-fried display-4 text-muted mb-3"></i>
-        <h3 class="h5 fw-bold text-secondary">No hay platos registrados en la carta</h3>
-        <p class="text-muted small mb-4">Comienza registrando los combos y especialidades del restaurante.</p>
-        <a asp-action="Create" class="btn btn-madero rounded-pill px-4 align-self-center">
-            <i class="bi bi-plus-lg me-1"></i> Agregar primer plato
-        </a>
-    </div>
-}
-else
-{
-    @foreach (var group in Model.CategoryGroups)
+    <!-- Listado de Platos Agrupados por Categoría (Grid 2 columnas) -->
+    @if (!Model.CategoryGroups.Any(g => g.Dishes.Any()))
     {
-        <div class="category-section mb-5">
-            <!-- Título de Categoría -->
-            <div class="d-flex align-items-center justify-content-between pb-2 mb-3 border-bottom border-2 border-madero-light">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="category-pill-indicator"></span>
-                    <h3 class="h4 fw-bold text-madero-dark mb-0">@group.CategoryName</h3>
-                    <span class="badge bg-light text-muted border rounded-pill ms-2">
-                        @group.Dishes.Count @(group.Dishes.Count == 1 ? "plato" : "platos")
-                    </span>
-                </div>
-            </div>
+        <div class="vm-empty-box">
+            No hay platos registrados en la carta.
+        </div>
+    }
+    else
+    {
+        @foreach (var group in Model.CategoryGroups.Where(g => g.Dishes.Any()))
+        {
+            <div class="vm-category-block">
+                <h2 class="vm-category-heading">@group.CategoryName</h2>
 
-            @if (!group.Dishes.Any())
-            {
-                <div class="alert alert-light text-muted border-dashed rounded-3 p-3 text-center small">
-                    No hay platos registrados en esta categoría.
-                </div>
-            }
-            else
-            {
-                <!-- Grid de Platos -->
-                <div class="row g-4">
+                <div class="vm-dish-grid">
                     @foreach (var dish in group.Dishes)
                     {
-                        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
-                            <div class="card dish-card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative @(!dish.IsActive ? "dish-card-inactive" : "")">
-                                <div class="card-body p-4 d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="badge rounded-pill px-3 py-1 small @(dish.IsActive ? "bg-success-subtle text-success border border-success-subtle" : "bg-secondary-subtle text-secondary border border-secondary-subtle")">
-                                            <i class="bi @(dish.IsActive ? "bi-check-circle-fill" : "bi-eye-slash-fill") me-1"></i>
-                                            @(dish.IsActive ? "Visible" : "Oculto")
-                                        </span>
-                                        <span class="text-muted small d-flex align-items-center gap-1">
-                                            <i class="bi bi-clock"></i> @dish.PreparationTimeMinutes min
-                                        </span>
+                        <div class="vm-dish-item @(!dish.IsActive ? "vm-dish-hidden" : "")">
+                            <div class="vm-dish-info">
+                                <div class="vm-dish-title">
+                                    @dish.Name
+                                    @if (!dish.IsActive)
+                                    {
+                                        <span class="vm-hidden-pill">Oculto</span>
+                                    }
+                                </div>
+                                <div class="vm-dish-desc">
+                                    @(string.IsNullOrWhiteSpace(dish.Description) ? "Sin descripción" : dish.Description)
+                                </div>
+                                <div class="vm-dish-price">
+                                    S/ @dish.Price.ToString("F2")
+                                </div>
+                            </div>
+
+                            <div class="vm-dish-actions">
+                                <!-- Ocultar / Mostrar -->
+                                <form asp-action="ToggleActive" asp-route-id="@dish.Id" method="post" class="d-inline m-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="vm-icon-btn" title="@(dish.IsActive ? "Ocultar plato" : "Mostrar plato")">
+                                        <i class="bi @(dish.IsActive ? "bi-eye" : "bi-eye-slash")"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Editar (abre Modal de Edición con el mismo diseño) -->
+                                <button type="button" class="vm-icon-btn" data-bs-toggle="modal" data-bs-target="#editModal-@dish.Id" title="Editar plato">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <!-- Eliminar -->
+                                <button type="button" class="vm-icon-btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal-@dish.Id" title="Eliminar plato">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Modal Emergente: Editar plato -->
+                        <div class="modal fade" id="editModal-@dish.Id" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered vm-modal-dialog">
+                                <div class="modal-content vm-modal-card">
+                                    <div class="vm-modal-header">
+                                        <h5 class="vm-modal-title">Editar plato</h5>
                                     </div>
 
-                                    <h4 class="h5 fw-bold text-madero-dark mb-2">@dish.Name</h4>
-                                    
-                                    <p class="text-muted small flex-grow-1 mb-3">
-                                        @(string.IsNullOrWhiteSpace(dish.Description) ? "Sin descripción detallada." : dish.Description)
-                                    </p>
+                                    <form asp-controller="Dish" asp-action="Edit" method="post" autocomplete="off">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@dish.Id" />
 
-                                    <div class="d-flex align-items-baseline justify-content-between pt-3 border-top mt-auto">
-                                        <div>
-                                            <span class="small text-muted d-block">Precio:</span>
-                                            <span class="fs-5 fw-bold text-madero">S/ @dish.Price.ToString("F2")</span>
+                                        <div class="vm-modal-body">
+                                            <div class="vm-field-group">
+                                                <label class="vm-modal-label">Nombre</label>
+                                                <input type="text" name="Name" value="@dish.Name" class="vm-modal-input" required minlength="3" maxlength="150" />
+                                            </div>
+
+                                            <div class="vm-field-group">
+                                                <label class="vm-modal-label">Descripción</label>
+                                                <textarea name="Description" rows="3" class="vm-modal-textarea" maxlength="500">@dish.Description</textarea>
+                                            </div>
+
+                                            <div class="vm-modal-row-3">
+                                                <div>
+                                                    <label class="vm-modal-label">Precio (S/)</label>
+                                                    <input type="number" name="Price" value="@dish.Price.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="0.50" min="0.50" class="vm-modal-input" required />
+                                                </div>
+                                                <div>
+                                                    <label class="vm-modal-label">Preparación (min)</label>
+                                                    <input type="number" name="PreparationTimeMinutes" value="@dish.PreparationTimeMinutes" min="0" max="360" class="vm-modal-input" required />
+                                                </div>
+                                                <div>
+                                                    <label class="vm-modal-label">Categoría</label>
+                                                    <select name="CategoryId" class="vm-modal-select" required>
+                                                        @foreach (var cat in Model.Categories)
+                                                        {
+                                                            <option value="@cat.Value" selected="@(cat.Value == dish.CategoryId.ToString())">@cat.Text</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <label class="vm-checkbox-wrapper">
+                                                <input type="checkbox" name="IsActive" value="true" class="vm-checkbox-orange" checked="@dish.IsActive" />
+                                                <span>Disponible en la carta</span>
+                                            </label>
                                         </div>
 
-                                        <!-- Barra de Acciones: Ocultar/Activar, Editar, Eliminar -->
-                                        <div class="d-flex align-items-center gap-1">
-                                            <!-- Botón Ocultar/Reactivar -->
-                                            <form asp-action="ToggleActive" asp-route-id="@dish.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-light text-secondary border rounded-circle" 
-                                                        title="@(dish.IsActive ? "Ocultar plato de la carta" : "Reactivar plato en la carta")">
-                                                    <i class="bi @(dish.IsActive ? "bi-eye-slash text-warning-emphasis" : "bi-eye text-success")"></i>
-                                                </button>
-                                            </form>
-
-                                            <!-- Botón Editar -->
-                                            <a asp-action="Edit" asp-route-id="@dish.Id" class="btn btn-sm btn-light text-secondary border rounded-circle" title="Editar plato">
-                                                <i class="bi bi-pencil text-primary"></i>
-                                            </a>
-
-                                            <!-- Botón Eliminar con Modal -->
-                                            <button type="button" class="btn btn-sm btn-light text-secondary border rounded-circle" 
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal-@dish.Id" title="Eliminar plato">
-                                                <i class="bi bi-trash text-danger"></i>
-                                            </button>
+                                        <div class="vm-modal-footer">
+                                            <button type="button" class="vm-btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="vm-btn-save">Guardar</button>
                                         </div>
-                                    </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Modal Confirmación de Eliminación -->
-                        <div class="modal fade" id="deleteModal-@dish.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@dish.Id" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content rounded-4 border-0 shadow">
-                                    <div class="modal-header border-bottom px-4 pt-4">
-                                        <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel-@dish.Id">
-                                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar Eliminación
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        <div class="modal fade" id="deleteModal-@dish.Id" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered vm-modal-dialog">
+                                <div class="modal-content vm-modal-card">
+                                    <div class="vm-modal-header">
+                                        <h5 class="vm-modal-title">Eliminar plato</h5>
                                     </div>
-                                    <div class="modal-body px-4 py-3">
-                                        <p class="mb-2">¿Estás seguro de que deseas eliminar permanentemente el plato:</p>
-                                        <div class="alert alert-light border fw-bold text-madero-dark mb-3">
-                                            @dish.Name - S/ @dish.Price.ToString("F2")
+                                    <div class="vm-modal-body">
+                                        <p class="mb-2 text-secondary small">¿Estás seguro de que deseas eliminar permanentemente este plato de la carta?</p>
+                                        <div class="p-3 rounded-3 border fw-bold text-madero-dark" style="background-color: #f5efe6;">
+                                            @dish.Name &mdash; S/ @dish.Price.ToString("F2")
                                         </div>
-                                        <p class="small text-muted mb-0">Esta acción removerá el plato de la carta gastronómica.</p>
                                     </div>
-                                    <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
-                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                                            Cancelar
-                                        </button>
-                                        <form asp-action="Delete" asp-route-id="@dish.Id" method="post" class="d-inline">
+                                    <div class="vm-modal-footer">
+                                        <button type="button" class="vm-btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                                        <form asp-action="Delete" asp-route-id="@dish.Id" method="post" class="d-inline m-0">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
-                                                <i class="bi bi-trash me-1"></i> Sí, eliminar plato
-                                            </button>
+                                            <button type="submit" class="vm-btn-save" style="background-color: #c53929;">Eliminar</button>
                                         </form>
                                     </div>
                                 </div>
@@ -193,7 +165,68 @@ else
                         </div>
                     }
                 </div>
-            }
-        </div>
+            </div>
+        }
     }
-}
+</div>
+
+<!-- Ventana Emergente (Modal): Agregar plato -->
+<div class="modal fade" id="addDishModal" tabindex="-1" aria-labelledby="addDishModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered vm-modal-dialog">
+        <div class="modal-content vm-modal-card">
+            <div class="vm-modal-header">
+                <h5 class="vm-modal-title" id="addDishModalLabel">Agregar plato</h5>
+            </div>
+
+            <form asp-controller="Dish" asp-action="Create" method="post" id="addDishForm" autocomplete="off">
+                @Html.AntiForgeryToken()
+
+                <div class="vm-modal-body">
+                    <div class="vm-field-group">
+                        <label class="vm-modal-label">Nombre</label>
+                        <input type="text" name="Name" class="vm-modal-input" required minlength="3" maxlength="150" />
+                    </div>
+
+                    <div class="vm-field-group">
+                        <label class="vm-modal-label">Descripción</label>
+                        <textarea name="Description" rows="3" class="vm-modal-textarea" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="vm-modal-row-3">
+                        <div>
+                            <label class="vm-modal-label">Precio (S/)</label>
+                            <input type="number" name="Price" step="0.50" min="0.50" class="vm-modal-input" required />
+                        </div>
+                        <div>
+                            <label class="vm-modal-label">Preparación (min)</label>
+                            <input type="number" name="PreparationTimeMinutes" min="0" max="360" value="20" class="vm-modal-input" required />
+                        </div>
+                        <div>
+                            <label class="vm-modal-label">Categoría</label>
+                            <select name="CategoryId" class="vm-modal-select" required>
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <option value="@cat.Value">@cat.Text</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="vm-checkbox-wrapper">
+                        <input type="checkbox" name="IsActive" value="true" class="vm-checkbox-orange" checked />
+                        <span>Disponible en la carta</span>
+                    </label>
+                </div>
+
+                <div class="vm-modal-footer">
+                    <button type="button" class="vm-btn-cancel" data-bs-dismiss="modal" onclick="document.getElementById('addDishForm').reset();">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="vm-btn-save">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

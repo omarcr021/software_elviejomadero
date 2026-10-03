@@ -38,8 +38,9 @@ namespace software_elviejomadero.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Categories = await _dishService.GetCategoriesSelectListAsync();
-                return View(model);
+                var errors = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                TempData["ErrorMessage"] = errors;
+                return RedirectToAction(nameof(Index));
             }
 
             var result = await _dishService.CreateDishAsync(model);
@@ -49,9 +50,8 @@ namespace software_elviejomadero.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Error al registrar el plato.");
-            model.Categories = await _dishService.GetCategoriesSelectListAsync();
-            return View(model);
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Error al registrar el plato.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -73,8 +73,9 @@ namespace software_elviejomadero.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Categories = await _dishService.GetCategoriesSelectListAsync();
-                return View(model);
+                var errors = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                TempData["ErrorMessage"] = errors;
+                return RedirectToAction(nameof(Index));
             }
 
             var result = await _dishService.UpdateDishAsync(model);
@@ -84,9 +85,8 @@ namespace software_elviejomadero.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Error al actualizar el plato.");
-            model.Categories = await _dishService.GetCategoriesSelectListAsync();
-            return View(model);
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Error al actualizar el plato.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]

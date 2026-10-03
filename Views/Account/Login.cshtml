@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Iniciar Sesión";
-    Layout = null; // Login tiene vista dedicada inmersiva con identidad visual del prototipo
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -13,137 +13,299 @@
     <title>Iniciar Sesión - El Viejo Madero</title>
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <!-- Fonts -->
+    <!-- Google Fonts: Inter (Sans-serif) + Georgia (Serif) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vm-brown: #633b22;
+            --vm-brown-hover: #4f2e1a;
+            --vm-orange: #d47628;
+            --vm-cream: #fbf8f3;
+            --vm-text-dark: #231710;
+            --vm-text-muted: #786d65;
+            --vm-border: #e0d7ce;
+            --font-serif: 'Georgia', 'Times New Roman', serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: var(--font-sans);
+            background-color: var(--vm-cream);
+            color: var(--vm-text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .login-split-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Panel Izquierdo */
+        .login-left-panel {
+            flex: 0 0 50%;
+            background-color: var(--vm-brown);
+            color: #ffffff;
+            padding: 2.75rem 3.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .vm-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .vm-logo-box {
+            width: 38px;
+            height: 38px;
+            background-color: var(--vm-orange);
+            color: #ffffff;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+        }
+
+        .vm-brand-text-light {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #ffffff;
+        }
+
+        .vm-brand-text-dark {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--vm-text-dark);
+        }
+
+        .hero-Copy {
+            margin-top: auto;
+            margin-bottom: auto;
+            padding-bottom: 2rem;
+            max-width: 440px;
+        }
+
+        .hero-title {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 3.35rem;
+            line-height: 1.08;
+            margin-bottom: 1.25rem;
+            color: #ffffff;
+        }
+
+        .hero-subtitle {
+            font-size: 0.98rem;
+            line-height: 1.55;
+            color: rgba(255, 255, 255, 0.82);
+            margin: 0;
+            max-width: 360px;
+        }
+
+        /* Panel Derecho */
+        .login-right-panel {
+            flex: 0 0 50%;
+            background-color: var(--vm-cream);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem 5rem;
+        }
+
+        .login-form-box {
+            width: 100%;
+            max-width: 390px;
+        }
+
+        .login-header-brand {
+            margin-bottom: 2.75rem;
+        }
+
+        .login-heading {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--vm-text-dark);
+            margin: 0 0 0.35rem 0;
+        }
+
+        .login-subheading {
+            font-size: 0.9rem;
+            color: var(--vm-text-muted);
+            margin: 0 0 1.85rem 0;
+        }
+
+        .vm-form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .vm-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #3d3028;
+            margin-bottom: 0.45rem;
+        }
+
+        .vm-input {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1.5px solid var(--vm-border);
+            border-radius: 8px;
+            padding: 0.68rem 0.9rem;
+            font-size: 0.95rem;
+            color: var(--vm-text-dark);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            outline: none;
+        }
+
+        .vm-input:focus {
+            border-color: var(--vm-orange);
+            box-shadow: 0 0 0 1px var(--vm-orange);
+        }
+
+        .vm-btn-submit {
+            width: 100%;
+            background-color: var(--vm-brown);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.78rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background-color 0.15s ease;
+        }
+
+        .vm-btn-submit:hover {
+            background-color: var(--vm-brown-hover);
+        }
+
+        .vm-error-alert {
+            background-color: #fdecea;
+            color: #b42318;
+            border: 1px solid #f5c2c7;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @@media (max-width: 900px) {
+            .login-split-container {
+                flex-direction: column;
+            }
+            .login-left-panel {
+                flex: none;
+                padding: 2rem;
+            }
+            .hero-Copy {
+                padding: 2rem 0 1rem 0;
+            }
+            .hero-title {
+                font-size: 2.4rem;
+            }
+            .login-right-panel {
+                flex: 1;
+                padding: 2.5rem 2rem;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
-<body class="bg-login-page d-flex align-items-center min-vh-100 py-4">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10 col-xl-9">
-                <div class="card card-login-wrapper shadow-lg border-0 overflow-hidden rounded-4">
-                    <div class="row g-0">
-                        <!-- Panel Izquierdo: Identidad Visual del Restaurante -->
-                        <div class="col-md-6 login-brand-panel d-flex flex-column justify-content-between p-4 p-lg-5 text-white">
-                            <div>
-                                <div class="d-inline-flex align-items-center gap-2 mb-4 brand-pill px-3 py-2 rounded-pill">
-                                    <i class="bi bi-fire text-warning fs-5"></i>
-                                    <span class="fw-bold tracking-wide">EL VIEJO MADERO</span>
-                                </div>
-                                <h2 class="display-6 fw-bold mb-3">Sabor tradicional & gestión eficiente</h2>
-                                <p class="text-white-50 fs-6 mb-0">
-                                    Sistema integral de gestión de comandas, carta gastronómica y colaboradores.
-                                </p>
-                            </div>
-                            <div class="mt-4 pt-3 border-top border-white-25">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="feature-icon-box rounded-circle bg-white-15 p-2 d-flex align-items-center justify-content-center">
-                                        <i class="bi bi-shield-lock-fill text-warning fs-5"></i>
-                                    </div>
-                                    <div class="small">
-                                        <span class="fw-semibold d-block text-white">Acceso Restringido</span>
-                                        <span class="text-white-50">Solo para personal autorizado</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<body>
+    <div class="login-split-container">
+        <!-- Mitad Izquierda: Identidad Visual -->
+        <div class="login-left-panel">
+            <div>
+                <div class="vm-brand">
+                    <span class="vm-logo-box">VM</span>
+                    <span class="vm-brand-text-light">El Viejo Madero</span>
+                </div>
+            </div>
 
-                        <!-- Panel Derecho: Formulario de Inicio de Sesión -->
-                        <div class="col-md-6 bg-white p-4 p-lg-5 d-flex flex-column justify-content-center">
-                            <div class="mb-4">
-                                <h3 class="fw-bold text-madero-dark mb-1">Iniciar sesión</h3>
-                                <p class="text-muted small">Ingresa tus credenciales para acceder a tus funciones.</p>
-                            </div>
+            <div class="hero-Copy">
+                <h1 class="hero-title">
+                    Cocina de leña,<br />
+                    servicio de<br />
+                    siempre.
+                </h1>
+                <p class="hero-subtitle">
+                    Pedidos en salón, coordinación de cocina y gestión de la carta en un solo lugar.
+                </p>
+            </div>
 
-                            @if (!ViewData.ModelState.IsValid)
-                            {
-                                <div class="alert alert-danger py-2 px-3 small rounded-3 mb-3 border-0 d-flex align-items-center gap-2" role="alert">
-                                    <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
-                                    <div>
-                                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                                        {
-                                            <div>@error.ErrorMessage</div>
-                                        }
-                                    </div>
-                                </div>
-                            }
+            <div></div>
+        </div>
 
-                            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" autocomplete="off">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" asp-for="ReturnUrl" />
-
-                                <div class="mb-3">
-                                    <label asp-for="UserName" class="form-label small fw-semibold text-secondary"></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0 text-muted">
-                                            <i class="bi bi-person"></i>
-                                        </span>
-                                        <input asp-for="UserName" class="form-control bg-light border-start-0 ps-0" placeholder="Ej: admin o mlopez" autofocus />
-                                    </div>
-                                    <span asp-validation-for="UserName" class="text-danger small"></span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="Password" class="form-label small fw-semibold text-secondary"></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0 text-muted">
-                                            <i class="bi bi-key"></i>
-                                        </span>
-                                        <input asp-for="Password" type="password" class="form-control bg-light border-start-0 border-end-0 ps-0" id="passwordInput" placeholder="••••••••" />
-                                        <button class="btn btn-light border border-start-0 text-muted" type="button" id="togglePasswordBtn">
-                                            <i class="bi bi-eye" id="toggleIcon"></i>
-                                        </button>
-                                    </div>
-                                    <span asp-validation-for="Password" class="text-danger small"></span>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div class="form-check">
-                                        <input asp-for="RememberMe" class="form-check-input check-madero" type="checkbox" id="rememberMeCheck" />
-                                        <label asp-for="RememberMe" class="form-check-label small text-secondary" for="rememberMeCheck">
-                                            Recordar mi sesión
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn btn-madero w-100 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                                    <i class="bi bi-box-arrow-in-right"></i>
-                                    <span>Entrar al sistema</span>
-                                </button>
-                            </form>
-
-                            <div class="mt-4 pt-3 border-top text-center text-muted small">
-                                <span class="d-block">&copy; 2026 El Viejo Madero</span>
-                                <span class="d-block">Todos los derechos reservados</span>
-                            </div>
-                        </div>
+        <!-- Mitad Derecha: Formulario de Acceso -->
+        <div class="login-right-panel">
+            <div class="login-form-box">
+                <div class="login-header-brand">
+                    <div class="vm-brand">
+                        <span class="vm-logo-box">VM</span>
+                        <span class="vm-brand-text-dark">El Viejo Madero</span>
                     </div>
                 </div>
+
+                <h2 class="login-heading">Iniciar sesión</h2>
+                <p class="login-subheading">Ingresa con tu usuario para continuar.</p>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="vm-error-alert" role="alert">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <div>@error.ErrorMessage</div>
+                        }
+                    </div>
+                }
+
+                <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" autocomplete="off">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div class="vm-form-group">
+                        <label asp-for="UserName" class="vm-label">Usuario</label>
+                        <input asp-for="UserName" class="vm-input" autofocus />
+                        <span asp-validation-for="UserName" class="text-danger small d-block mt-1"></span>
+                    </div>
+
+                    <div class="vm-form-group">
+                        <label asp-for="Password" class="vm-label">Contraseña</label>
+                        <input asp-for="Password" type="password" class="vm-input" />
+                        <span asp-validation-for="Password" class="text-danger small d-block mt-1"></span>
+                    </div>
+
+                    <button type="submit" class="vm-btn-submit">
+                        Entrar
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Toggle ver/ocultar contraseña
-        document.getElementById('togglePasswordBtn')?.addEventListener('click', function () {
-            const passInput = document.getElementById('passwordInput');
-            const icon = document.getElementById('toggleIcon');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                passInput.type = 'password';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            }
-        });
-    </script>
+    <partial name="_ValidationScriptsPartial" />
 </body>
 </html>

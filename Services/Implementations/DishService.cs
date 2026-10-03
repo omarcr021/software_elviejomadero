@@ -60,11 +60,18 @@ namespace software_elviejomadero.Services.Implementations
                 });
             }
 
+            var selectCategories = categories.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name
+            }).ToList();
+
             return new DishListViewModel
             {
                 CategoryGroups = groups,
                 TotalDishesCount = totalDishes,
-                ActiveDishesCount = activeDishes
+                ActiveDishesCount = activeDishes,
+                Categories = selectCategories
             };
         }
 
@@ -111,7 +118,7 @@ namespace software_elviejomadero.Services.Implementations
                 Price = model.Price,
                 PreparationTimeMinutes = model.PreparationTimeMinutes,
                 CategoryId = model.CategoryId,
-                IsActive = true,
+                IsActive = model.IsActive,
                 CreatedAt = DateTime.UtcNow
             };
 
