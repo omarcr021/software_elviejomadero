@@ -1,0 +1,67 @@
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editores e IDEs
+.vscode/
+.idea/
+.vs/
+*.user
+*.suo
+*.swp
+*.swo
+*.swn
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs y archivos temporales
+*.log
+logs/
+*.tmp
+*.temp
+*.cache
+
+# Dependencias
+node_modules/
+vendor/
+
+# Compilación y cobertura
+dist/
+build/
+coverage/
+.NET build artifacts
+bin/
+obj/
+TestResults/
+.nyc_output/
+*.min.js
+*.min.css
+
+# PHP / Laravel
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/*
+public/storage
+
+# Bases de datos y copias locales
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.backup
+
+# Archivos comprimidos y del sistema
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz

@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Acceso Denegado";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-md-6 text-center">
+        <div class="card border-0 shadow-sm rounded-4 p-5">
+            <div class="mb-4">
+                <i class="bi bi-shield-x text-danger display-1"></i>
+            </div>
+            <h2 class="fw-bold text-madero-dark mb-2">Acceso No Autorizado</h2>
+            <p class="text-muted mb-4">
+                No cuentas con los permisos necesarios para acceder a este módulo. Tu rol actual no está habilitado para esta funcionalidad.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-1"></i> Volver al Inicio
+                </a>
+                @if (User.IsInRole("Administrador"))
+                {
+                    <a asp-controller="Administration" asp-action="Index" class="btn btn-madero rounded-pill px-4">
+                        <i class="bi bi-speedometer2 me-1"></i> Panel de Administración
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

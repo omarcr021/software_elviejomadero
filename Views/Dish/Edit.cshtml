@@ -1,0 +1,90 @@
+@model software_elviejomadero.ViewModels.EditDishViewModel
+
+@{
+    ViewData["Title"] = "Editar Plato";
+}
+
+<div class="row justify-content-center py-3">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle p-1 px-2" title="Volver a la carta">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <span class="badge bg-madero-soft text-madero rounded-pill px-3 py-1">Carta Gastronómica</span>
+                </div>
+                <h1 class="h4 fw-bold text-madero-dark mb-0">Editar plato</h1>
+                <p class="text-muted small mb-0">Modifica los detalles, precio o disponibilidad del plato seleccionado.</p>
+            </div>
+
+            <form asp-action="Edit" method="post" autocomplete="off">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small rounded-3 mb-3 border-0"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label small fw-semibold text-secondary"></label>
+                        <input asp-for="Name" class="form-control" autofocus />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label small fw-semibold text-secondary"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Price" class="form-label small fw-semibold text-secondary"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">S/</span>
+                                <input asp-for="Price" type="number" step="0.50" min="0.50" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PreparationTimeMinutes" class="form-label small fw-semibold text-secondary"></label>
+                            <div class="input-group">
+                                <input asp-for="PreparationTimeMinutes" type="number" min="0" max="360" class="form-control" />
+                                <span class="input-group-text bg-light text-muted">min</span>
+                            </div>
+                            <span asp-validation-for="PreparationTimeMinutes" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CategoryId" class="form-label small fw-semibold text-secondary"></label>
+                        <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check form-switch p-3 bg-light rounded-3 mb-2">
+                        <input asp-for="IsActive" class="form-check-input ms-0 me-3" type="checkbox" id="dishActiveSwitch" />
+                        <label class="form-check-label small fw-medium text-secondary" for="dishActiveSwitch">
+                            Plato visible en la carta (disponible para toma de pedidos)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light border-top p-4 d-flex justify-content-between align-items-center">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-madero rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Actualizar cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

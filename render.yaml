@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: software-elviejomadero
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: 8080
+      - key: ConnectionStrings__DefaultConnection
+        value: Data Source=/app/data/viejo_madero.db

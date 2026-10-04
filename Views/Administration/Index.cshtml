@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Administración";
+}
+
+<div class="vm-admin-wrapper">
+    <!-- Encabezado de Administración y Pestañas Segmentadas -->
+    <div class="vm-admin-header">
+        <div>
+            <h1 class="vm-page-title">Administración</h1>
+            <p class="vm-page-subtitle">Operación, carta, empleados y resultados de El Viejo Madero.</p>
+        </div>
+
+        <div class="vm-segmented-tabs">
+            <a class="vm-seg-tab active" asp-controller="Administration" asp-action="Index">Resumen</a>
+            <a class="vm-seg-tab" asp-controller="Dish" asp-action="Index">Carta</a>
+            <a class="vm-seg-tab" asp-controller="Employee" asp-action="Index">Empleados</a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen Minimalistas -->
+    <div class="vm-stats-grid">
+        <div class="vm-stat-box">
+            <span class="vm-stat-label">Pedidos activos</span>
+            <strong class="vm-stat-value">0</strong>
+        </div>
+
+        <div class="vm-stat-box">
+            <span class="vm-stat-label">Usuarios activos</span>
+            <strong class="vm-stat-value">@ViewBag.ActiveEmployees</strong>
+        </div>
+
+        <div class="vm-stat-box">
+            <span class="vm-stat-label">Ventas registradas</span>
+            <strong class="vm-stat-value">S/ 0.00</strong>
+        </div>
+    </div>
+</div>
