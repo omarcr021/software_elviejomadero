@@ -53,6 +53,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IAuthenticationService, software_elviejomadero.Services.Implementations.AuthenticationService>();
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IEmployeeService, software_elviejomadero.Services.Implementations.EmployeeService>();
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IDishService, software_elviejomadero.Services.Implementations.DishService>();
+builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IOrderService, software_elviejomadero.Services.Implementations.OrderService>();
 
 // 5. Registrar MVC con Vistas y ForwardedHeaders para Reverse Proxy (Render)
 builder.Services.AddControllersWithViews();

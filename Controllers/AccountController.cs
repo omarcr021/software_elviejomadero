@@ -24,6 +24,10 @@ namespace software_elviejomadero.Controllers
                 {
                     return RedirectToAction("Index", "Administration");
                 }
+                if (User.IsInRole("Recepcionista"))
+                {
+                    return RedirectToAction("Index", "ReceptionOrder");
+                }
                 return RedirectToAction("Index", "Home");
             }
 
@@ -45,8 +49,6 @@ namespace software_elviejomadero.Controllers
 
             if (result.Status == LoginResultStatus.Success && result.User != null)
             {
-                TempData["SuccessMessage"] = $"Bienvenido, {result.User.FullName}.";
-
                 if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 {
                     return Redirect(model.ReturnUrl);
@@ -57,7 +59,12 @@ namespace software_elviejomadero.Controllers
                     return RedirectToAction("Index", "Administration");
                 }
 
-                // Roles operativos (Mozo, Cocinero, Recepcionista, Repartidor)
+                if (result.Roles.Contains("Recepcionista"))
+                {
+                    return RedirectToAction("Index", "ReceptionOrder");
+                }
+
+                // Otros roles operativos (Mozo, Cocinero, Repartidor)
                 return RedirectToAction("Index", "Home");
             }
 

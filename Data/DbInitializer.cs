@@ -17,6 +17,44 @@ namespace software_elviejomadero.Data
             // 1. Aplicar migraciones pendientes automáticamente
             await context.Database.MigrateAsync();
 
+            // Asegurar creación idempotente de tablas Orders y OrderItems en SQLite (Sprint 2 - HU-06)
+            await context.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""Orders"" (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_Orders"" PRIMARY KEY AUTOINCREMENT,
+                    ""OrderCode"" TEXT NOT NULL,
+                    ""OrderType"" TEXT NOT NULL,
+                    ""Status"" TEXT NOT NULL,
+                    ""CustomerName"" TEXT NOT NULL,
+                    ""CustomerPhone"" TEXT NOT NULL,
+                    ""DeliveryAddress"" TEXT NULL,
+                    ""Latitude"" REAL NULL,
+                    ""Longitude"" REAL NULL,
+                    ""PaymentMethod"" TEXT NOT NULL,
+                    ""AdditionalNote"" TEXT NULL,
+                    ""TotalAmount"" decimal(10, 2) NOT NULL,
+                    ""TotalItemsCount"" INTEGER NOT NULL,
+                    ""CreatedAt"" TEXT NOT NULL,
+                    ""ReceptionistId"" TEXT NOT NULL,
+                    CONSTRAINT ""FK_Orders_AspNetUsers_ReceptionistId"" FOREIGN KEY (""ReceptionistId"") REFERENCES ""AspNetUsers"" (""Id"") ON DELETE RESTRICT
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Orders_OrderCode"" ON ""Orders"" (""OrderCode"");
+                CREATE INDEX IF NOT EXISTS ""IX_Orders_ReceptionistId"" ON ""Orders"" (""ReceptionistId"");
+
+                CREATE TABLE IF NOT EXISTS ""OrderItems"" (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_OrderItems"" PRIMARY KEY AUTOINCREMENT,
+                    ""OrderId"" INTEGER NOT NULL,
+                    ""DishId"" INTEGER NOT NULL,
+                    ""DishName"" TEXT NOT NULL,
+                    ""Quantity"" INTEGER NOT NULL,
+                    ""UnitPrice"" decimal(10, 2) NOT NULL,
+                    ""Subtotal"" decimal(10, 2) NOT NULL,
+                    CONSTRAINT ""FK_OrderItems_Dishes_DishId"" FOREIGN KEY (""DishId"") REFERENCES ""Dishes"" (""Id"") ON DELETE RESTRICT,
+                    CONSTRAINT ""FK_OrderItems_Orders_OrderId"" FOREIGN KEY (""OrderId"") REFERENCES ""Orders"" (""Id"") ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS ""IX_OrderItems_DishId"" ON ""OrderItems"" (""DishId"");
+                CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
+            ");
+
             // 2. Sembrar Roles requeridos para El Viejo Madero
             string[] roles = ["Administrador", "Mozo", "Cocinero", "Recepcionista", "Repartidor"];
             foreach (var roleName in roles)
@@ -28,7 +66,7 @@ namespace software_elviejomadero.Data
                 }
             }
 
-            // 3. Sembrar Usuario Administrador Inicial para Desarrollo
+            // 3. Sembrar Usuario Administrador Inicial
             var adminUser = await userManager.FindByNameAsync("admin");
             if (adminUser == null)
             {
@@ -54,6 +92,30 @@ namespace software_elviejomadero.Data
                 {
                     logger.LogError("Error al crear usuario administrador inicial: {Errors}",
                         string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                }
+            }
+
+            // 3b. Sembrar Usuario Recepcionista Inicial del Prototipo (Lucía Vega - lvega / Recepcion123*!)
+            var recepUser = await userManager.FindByNameAsync("lvega");
+            if (recepUser == null && !await context.Users.AnyAsync(u => u.DNI == "71234567"))
+            {
+                recepUser = new ApplicationUser
+                {
+                    UserName = "lvega",
+                    Email = "lvega@elviejomadero.com",
+                    FullName = "Lucía Vega",
+                    DNI = "71234567",
+                    Phone = "987654321",
+                    IsActive = true,
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createRecepResult = await userManager.CreateAsync(recepUser, "Recepcion123*!");
+                if (createRecepResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(recepUser, "Recepcionista");
+                    logger.LogInformation("Usuario Recepcionista inicial creado con éxito (lvega / Recepcion123*!).");
                 }
             }
 

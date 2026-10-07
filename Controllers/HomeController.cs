@@ -16,6 +16,11 @@ public class HomeController : Controller
             return RedirectToAction("Index", "Administration");
         }
 
+        if (User.IsInRole("Recepcionista"))
+        {
+            return RedirectToAction("Index", "ReceptionOrder");
+        }
+
         return View();
     }
 
