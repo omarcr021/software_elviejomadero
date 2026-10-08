@@ -22,9 +22,6 @@ namespace software_elviejomadero.Controllers
             ViewBag.ActiveDishes = await _context.Dishes.CountAsync(d => d.IsActive);
             ViewBag.TotalEmployees = await _context.Users.CountAsync();
             ViewBag.ActiveEmployees = await _context.Users.CountAsync(u => u.IsActive);
-            ViewBag.ActiveOrders = await _context.Orders.CountAsync();
-            var salesSum = await _context.Orders.SumAsync(o => (double?)o.TotalAmount) ?? 0.0;
-            ViewBag.TotalSales = (decimal)salesSum;
 
             return View();
         }
