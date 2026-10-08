@@ -1,0 +1,54 @@
+@model software_elviejomadero.ViewModels.DeliveryRouteDashboardViewModel
+@{
+    ViewData["Title"] = "Despacho y rutas";
+}
+<div class="vm-admin-wrapper">
+    <div class="vm-admin-header">
+        <div><h1 class="vm-page-title"><i class="bi bi-bicycle me-2"></i>Despacho y rutas</h1>
+            <p class="vm-page-subtitle">Gestiona pedidos listos, rutas activas y entregas.</p></div>
+        <div class="d-flex gap-2">
+            <div class="vm-route-counter"><small>Pendientes</small><strong>@Model.Ready.Count</strong></div>
+            <div class="vm-route-counter"><small>En ruta</small><strong>@Model.InRoute.Count</strong></div>
+        </div>
+    </div>
+    <div class="vm-route-tabs"><a href="#readyOrders">Despacho activo (@Model.Ready.Count)</a><a href="#routeOrders">En ruta (@Model.InRoute.Count)</a><a asp-action="Index">Actualizar</a></div>
+    <section id="readyOrders" class="mt-4"><h2 class="vm-section-heading">Listos para despacho</h2>
+        @if (!Model.Ready.Any())
+        {
+            <div class="vm-empty-box">No hay pedidos listos para despacho.</div>
+        }
+        @foreach (var order in Model.Ready)
+        {
+            <article class="vm-dispatch-card">
+                <div class="vm-dispatch-heading"><strong>@order.Code</strong><span class="vm-route-badge">Listo para despacho</span><strong>S/ @order.Total.ToString("F2")</strong></div>
+                <p class="vm-route-meta"><i class="bi bi-person me-1"></i>@order.CustomerName <i class="bi bi-geo-alt ms-3 me-1"></i>@order.Address <i class="bi bi-basket ms-3 me-1"></i>@order.ItemsCount productos</p>
+                <details class="vm-route-details"><summary>Ver detalle del pedido</summary>
+                    <p><strong>Teléfono:</strong> @order.Phone</p><p><strong>Dirección:</strong> @order.Address</p>
+                    @foreach (var item in order.Items) { <p class="mb-1">@item.Quantity × @item.Name — S/ @item.UnitPrice.ToString("F2") c/u</p> }
+                    <p class="mt-2"><strong>Monto a cobrar:</strong> S/ @order.Total.ToString("F2")</p>
+                </details>
+                <form asp-action="Start" asp-route-id="@order.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="vm-btn-save mt-3" type="submit"><i class="bi bi-sign-turn-right me-1"></i> Aceptar e iniciar ruta</button>
+                </form>
+            </article>
+        }
+    </section>
+    <section id="routeOrders" class="mt-4"><h2 class="vm-section-heading">Mis pedidos en ruta</h2>
+        @if (!Model.InRoute.Any()) { <div class="vm-empty-box">Aún no tienes pedidos en ruta.</div> }
+        @foreach (var order in Model.InRoute)
+        {
+            <article class="vm-dispatch-card">
+                <div class="vm-dispatch-heading"><strong>@order.Code</strong><span class="vm-route-badge vm-route-active">En camino</span><strong>S/ @order.Total.ToString("F2")</strong></div>
+                <p class="vm-route-meta">@order.CustomerName — @order.Address — @order.ItemsCount productos</p>
+                <p class="small text-muted">Inicio de ruta: @(order.RouteStartedAt.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(order.RouteStartedAt.Value, DateTimeKind.Utc), TimeZoneInfo.FindSystemTimeZoneById("America/Lima")).ToString("dd/MM/yyyy HH:mm") + " (Perú)" : "—")</p>
+                <details class="vm-route-details"><summary>Ver detalle y contacto</summary>
+                    <p><strong>Cliente:</strong> @order.CustomerName</p><p><strong>Teléfono:</strong> <a href="tel:@order.Phone">@order.Phone</a></p>
+                    <p><strong>Dirección:</strong> @order.Address</p>
+                    @foreach (var item in order.Items) { <p class="mb-1">@item.Quantity × @item.Name — S/ @item.UnitPrice.ToString("F2") c/u</p> }
+                    <p><strong>Monto a cobrar:</strong> S/ @order.Total.ToString("F2")</p>
+                </details>
+            </article>
+        }
+    </section>
+</div>

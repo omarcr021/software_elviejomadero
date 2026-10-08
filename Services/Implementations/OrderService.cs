@@ -18,6 +18,7 @@ namespace software_elviejomadero.Services.Implementations
         public async Task<List<ReceptionOrderCardViewModel>> GetReceptionOrdersAsync()
         {
             var orders = await _context.Orders
+                .Where(o => o.OrderType == OrderTypes.Delivery || o.OrderType == OrderTypes.Takeout)
                 .Include(o => o.Receptionist)
                 .Include(o => o.Items)
                 .OrderByDescending(o => o.CreatedAt)
@@ -45,7 +46,12 @@ namespace software_elviejomadero.Services.Implementations
 
         public async Task<string> GenerateUniqueOrderCodeAsync(string orderType)
         {
-            string prefix = orderType == OrderTypes.Takeout ? "#T" : "#D";
+            string prefix = orderType switch
+            {
+                OrderTypes.Takeout => "#T",
+                OrderTypes.DineIn => "#S",
+                _ => "#D"
+            };
 
             for (int attempt = 0; attempt < 100; attempt++)
             {

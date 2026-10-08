@@ -55,6 +55,16 @@ namespace software_elviejomadero.Data
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
             ");
 
+            // HU-03: sembrar mesas solo cuando el restaurante aún no tenga ninguna.
+            if (!await context.RestaurantTables.AnyAsync())
+            {
+                context.RestaurantTables.AddRange(Enumerable.Range(1, 8).Select(i => new RestaurantTable
+                {
+                    Number = $"M{i}", Status = TableStatuses.Free, IsActive = true
+                }));
+                await context.SaveChangesAsync();
+            }
+
             // 2. Sembrar Roles requeridos para El Viejo Madero
             string[] roles = ["Administrador", "Mozo", "Cocinero", "Recepcionista", "Repartidor"];
             foreach (var roleName in roles)

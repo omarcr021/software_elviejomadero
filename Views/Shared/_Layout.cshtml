@@ -49,7 +49,26 @@
                     </div>
                 </a>
 
-                <div class="d-flex align-items-center">
+                <div class="vm-topbar-actions">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @if (User.IsInRole("Mozo") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="SalonOrder" asp-action="Index">Salón</a>
+                        }
+                        @if (User.IsInRole("Recepcionista") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="ReceptionOrder" asp-action="Index">Recepción</a>
+                        }
+                        @if (User.IsInRole("Cocinero") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="KitchenDispatch" asp-action="Index">Cocina</a>
+                        }
+                        @if (User.IsInRole("Repartidor") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="DeliveryRoute" asp-action="Index">Reparto</a>
+                        }
+                    }
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">

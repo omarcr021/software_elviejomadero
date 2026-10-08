@@ -319,6 +319,9 @@ namespace software_elviejomadero.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DeliveryDriverId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DeliveryAddress")
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
@@ -328,6 +331,9 @@ namespace software_elviejomadero.Migrations
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("REAL");
+
+                    b.Property<DateTime?>("RouteStartedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("OrderCode")
                         .IsRequired()
@@ -350,8 +356,12 @@ namespace software_elviejomadero.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .IsConcurrencyToken()
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("TableId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(10, 2)
@@ -362,12 +372,41 @@ namespace software_elviejomadero.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeliveryDriverId");
+
                     b.HasIndex("OrderCode")
                         .IsUnique();
 
                     b.HasIndex("ReceptionistId");
 
+                    b.HasIndex("TableId");
+
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("software_elviejomadero.Models.RestaurantTable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .IsConcurrencyToken()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+                    b.HasIndex("Number").IsUnique();
+                    b.ToTable("RestaurantTables");
                 });
 
             modelBuilder.Entity("software_elviejomadero.Models.OrderItem", b =>
@@ -471,13 +510,27 @@ namespace software_elviejomadero.Migrations
 
             modelBuilder.Entity("software_elviejomadero.Models.Order", b =>
                 {
+                    b.HasOne("software_elviejomadero.Models.ApplicationUser", "DeliveryDriver")
+                        .WithMany()
+                        .HasForeignKey("DeliveryDriverId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("software_elviejomadero.Models.RestaurantTable", "Table")
+                        .WithMany("Orders")
+                        .HasForeignKey("TableId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("software_elviejomadero.Models.ApplicationUser", "Receptionist")
                         .WithMany()
                         .HasForeignKey("ReceptionistId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("DeliveryDriver");
+
                     b.Navigation("Receptionist");
+
+                    b.Navigation("Table");
                 });
 
             modelBuilder.Entity("software_elviejomadero.Models.OrderItem", b =>
@@ -507,6 +560,11 @@ namespace software_elviejomadero.Migrations
             modelBuilder.Entity("software_elviejomadero.Models.Order", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("software_elviejomadero.Models.RestaurantTable", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }

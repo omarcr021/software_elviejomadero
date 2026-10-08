@@ -7,11 +7,15 @@ namespace software_elviejomadero.Models
     {
         public const string Delivery = "Delivery";
         public const string Takeout = "Para llevar";
+        public const string DineIn = "Salón";
     }
 
     public static class OrderStatuses
     {
         public const string New = "Nuevo";
+        public const string InKitchen = "En cocina";
+        public const string ReadyForDispatch = "Listo para despacho";
+        public const string OnTheWay = "En camino";
     }
 
     public static class PaymentMethods
@@ -67,6 +71,15 @@ namespace software_elviejomadero.Models
         public int TotalItemsCount { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // HU-03: el salón comparte la entidad de pedidos existente.
+        public int? TableId { get; set; }
+        public RestaurantTable? Table { get; set; }
+
+        // HU-14: solo se asigna un repartidor después de aceptar la ruta.
+        public string? DeliveryDriverId { get; set; }
+        public ApplicationUser? DeliveryDriver { get; set; }
+        public DateTime? RouteStartedAt { get; set; }
 
         [Required]
         public string ReceptionistId { get; set; } = string.Empty;

@@ -1,0 +1,11 @@
+@model software_elviejomadero.ViewModels.SalonOrderConfirmationViewModel
+@{
+    ViewData["Title"] = "Pedido enviado a cocina";
+}
+<div class="vm-confirmation-card">
+    <div class="vm-confirmation-icon"><i class="bi bi-check2-circle"></i></div>
+    <h1>¡Pedido enviado a cocina!</h1>
+    <p>El pedido <strong>@Model.OrderCode</strong> de la mesa <strong>@Model.TableNumber</strong> se registró correctamente.</p>
+    <p>Cliente: <strong>@Model.CustomerName</strong></p>
+    <a asp-controller="Home" asp-action="Index" class="vm-btn-save text-decoration-none">Volver al inicio</a>
+</div>
