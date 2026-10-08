@@ -1,0 +1,132 @@
+@model software_elviejomadero.ViewModels.SalonNewOrderViewModel
+@{
+    ViewData["Title"] = "Pedido del salón";
+}
+<div class="vm-admin-wrapper">
+    <div class="mb-3"><a asp-action="Index" class="text-decoration-none text-madero"><i class="bi bi-arrow-left"></i> Volver a mesas</a></div>
+    <div class="vm-admin-header">
+        <div><h1 class="vm-page-title">Mesa @Model.TableNumber <span class="vm-tag-salon">Salón</span></h1>
+            <p class="vm-page-subtitle">Revisa los platos del cliente antes de enviarlos a cocina.</p></div>
+    </div>
+    <form id="salonForm" asp-controller="SalonOrder" asp-action="Create" method="post" autocomplete="off">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="TableId" value="@Model.TableId" />
+        <div class="vm-field-group vm-salon-customer">
+            <label class="vm-modal-label" for="salonCustomerName">Nombre del cliente</label>
+            <input id="salonCustomerName" class="vm-modal-input" name="CustomerName" required maxlength="120" placeholder="Ej: Juan" />
+        </div>
+        <div class="vm-step2-layout vm-salon-layout">
+            <section class="vm-step2-catalog">
+                @foreach (var group in Model.CategoryGroups)
+                {
+                    <div class="vm-step2-cat-block">
+                        <h2 class="vm-step2-cat-title">@group.CategoryName</h2>
+                        <div class="vm-step2-dish-list">
+                            @foreach (var dish in group.Dishes)
+                            {
+                                <div class="vm-step2-dish-item vm-salon-dish">
+                                    <div class="vm-step2-dish-info"><div class="vm-step2-dish-name">@dish.Name</div>
+                                        <div class="vm-step2-dish-desc">@dish.Description</div></div>
+                                    <div class="vm-step2-dish-right">
+                                        <span class="vm-step2-dish-price">S/ @dish.Price.ToString("F2")</span>
+                                        <button type="button" class="vm-salon-add" data-id="@dish.Id" data-name="@dish.Name" data-price="@dish.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" aria-label="Agregar @dish.Name">+</button>
+                                        <span class="vm-salon-indicator" id="salonBadge-@dish.Id" aria-label="Cantidad seleccionada">0</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+            <aside class="vm-step2-cart vm-salon-cart">
+                <h2 class="vm-step2-cart-title">Pedido</h2>
+                <div id="salonCart" class="vm-step2-cart-items"><p class="vm-cart-empty">Aún no hay platos en el pedido.</p></div>
+                <div class="vm-step2-cart-footer"><span>Total</span><strong id="salonTotal">S/ 0.00</strong></div>
+                <div id="salonHiddenItems"></div>
+                <p id="salonError" class="text-danger small mt-2" role="alert" hidden></p>
+                <button id="salonSubmit" class="vm-btn-save w-100 mt-3" type="submit" disabled>
+                    <i class="bi bi-send me-1"></i> Confirmar y enviar a cocina
+                </button>
+            </aside>
+        </div>
+    </form>
+</div>
+@section Scripts {
+<script>
+(() => {
+    const form = document.getElementById('salonForm');
+    const cartBox = document.getElementById('salonCart');
+    const hiddenBox = document.getElementById('salonHiddenItems');
+    const submit = document.getElementById('salonSubmit');
+    const error = document.getElementById('salonError');
+    const cart = new Map();
+    const money = value => `S/ ${value.toFixed(2)}`;
+    const button = (label, title, handler, className = 'vm-qty-btn') => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = label; b.title = title; b.className = className;
+        b.addEventListener('click', handler);
+        return b;
+    };
+    function render() {
+        cartBox.replaceChildren(); hiddenBox.replaceChildren();
+        let total = 0; let index = 0;
+        for (const dish of cart.values()) {
+            total += dish.price * dish.quantity;
+            const row = document.createElement('div'); row.className = 'vm-cart-row';
+            const description = document.createElement('div'); description.className = 'vm-cart-row-info';
+            const name = document.createElement('div'); name.className = 'vm-cart-row-name'; name.textContent = dish.name;
+            const unit = document.createElement('div'); unit.className = 'vm-cart-row-unit'; unit.textContent = `${money(dish.price)} c/u`;
+            description.append(name, unit);
+            const controls = document.createElement('div'); controls.className = 'vm-cart-row-controls';
+            const count = document.createElement('span'); count.className = 'vm-qty-val'; count.textContent = dish.quantity;
+            controls.append(
+                button('−', 'Disminuir', () => change(dish.id, -1)), count,
+                button('+', 'Aumentar', () => change(dish.id, 1)),
+                button('×', 'Eliminar', () => { cart.delete(dish.id); render(); }, 'vm-qty-del')
+            );
+            row.append(description, controls); cartBox.append(row);
+            for (const [key, val] of [['DishId', dish.id], ['Quantity', dish.quantity]]) {
+                const input = document.createElement('input'); input.type = 'hidden';
+                input.name = `Items[${index}].${key}`; input.value = val; hiddenBox.append(input);
+            }
+            ++index;
+        }
+        if (!cart.size) {
+            const empty = document.createElement('p'); empty.className = 'vm-cart-empty';
+            empty.textContent = 'Aún no hay platos en el pedido.'; cartBox.append(empty);
+        }
+        document.getElementById('salonTotal').textContent = money(total);
+        document.querySelectorAll('.vm-salon-indicator').forEach(b => {
+            const id = Number(b.id.replace('salonBadge-', ''));
+            b.textContent = cart.get(id)?.quantity ?? '0';
+            b.classList.toggle('has-qty', cart.has(id));
+        });
+        submit.disabled = !cart.size;
+        error.hidden = true;
+    }
+    function change(id, diff) {
+        const dish = cart.get(id); if (!dish) return;
+        dish.quantity += diff;
+        if (dish.quantity <= 0) cart.delete(id);
+        render();
+    }
+    document.querySelectorAll('.vm-salon-add').forEach(b => b.addEventListener('click', () => {
+        const id = Number(b.dataset.id);
+        const dish = cart.get(id);
+        if (dish) {
+            if (dish.quantity >= 999) return;
+            dish.quantity += 1;
+        } else cart.set(id, { id, name: b.dataset.name, price: Number(b.dataset.price), quantity: 1 });
+        render();
+    }));
+    form.addEventListener('submit', e => {
+        if (!cart.size || !document.getElementById('salonCustomerName').value.trim()) {
+            e.preventDefault(); error.textContent = 'Ingresa el nombre del cliente y selecciona al menos un plato.';
+            error.hidden = false; return;
+        }
+        submit.disabled = true;
+    });
+    render();
+})();
+</script>
+}

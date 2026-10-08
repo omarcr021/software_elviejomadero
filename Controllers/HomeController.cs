@@ -16,6 +16,18 @@ public class HomeController : Controller
             return RedirectToAction("Index", "Administration");
         }
 
+        if (User.IsInRole("Recepcionista"))
+        {
+            return RedirectToAction("Index", "ReceptionOrder");
+        }
+
+        if (User.IsInRole("Mozo"))
+            return RedirectToAction("Index", "SalonOrder");
+        if (User.IsInRole("Repartidor"))
+            return RedirectToAction("Index", "DeliveryRoute");
+        if (User.IsInRole("Cocinero"))
+            return RedirectToAction("Index", "KitchenDispatch");
+
         return View();
     }
 

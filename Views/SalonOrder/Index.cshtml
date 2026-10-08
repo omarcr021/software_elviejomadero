@@ -1,0 +1,33 @@
+@model software_elviejomadero.ViewModels.SalonTablesViewModel
+@using software_elviejomadero.Models
+@{
+    ViewData["Title"] = "Mesas del salón";
+}
+<div class="vm-admin-wrapper">
+    <div class="vm-admin-header">
+        <div>
+            <h1 class="vm-page-title"><i class="bi bi-shop-window me-2"></i>Mesas del Salón</h1>
+            <p class="vm-page-subtitle">Selecciona una mesa libre para registrar un pedido y enviarlo a cocina.</p>
+        </div>
+        <a asp-action="Index" class="vm-btn-outline-action text-decoration-none"><i class="bi bi-arrow-clockwise me-1"></i> Actualizar estados</a>
+    </div>
+    <div class="vm-tables-grid">
+        @foreach (var table in Model.Tables)
+        {
+            var free = table.Status == TableStatuses.Free;
+            <div class="vm-table-tile @(free ? "vm-table-free" : "vm-table-occupied")">
+                <i class="bi bi-people vm-table-icon"></i>
+                <h2 class="vm-table-number">@table.Number</h2>
+                <span class="vm-table-state @(free ? "text-success" : "text-danger")">@table.Status</span>
+                @if (free)
+                {
+                    <a asp-action="New" asp-route-tableId="@table.Id" class="vm-btn-save text-decoration-none mt-3">Registrar pedido</a>
+                }
+                else
+                {
+                    <button class="vm-btn-outline-action mt-3" type="button" disabled>Mesa ocupada</button>
+                }
+            </div>
+        }
+    </div>
+</div>

@@ -628,3 +628,585 @@ body {
     border-color: #542b18;
     color: #ffffff;
 }
+
+/* =========================================================
+   HU-06: PEDIDOS DE RECEPCIÓN Y ASISTENTE DE 4 PASOS
+   ========================================================= */
+.vm-btn-outline-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fbf7f0;
+    color: #38261b;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.48rem 0.95rem;
+    border-radius: 8px;
+    border: 1px solid #ded4c6;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vm-btn-outline-action:hover {
+    background-color: #f0e8dc;
+    color: #231710;
+}
+
+.vm-orders-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 992px) {
+    .vm-orders-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .vm-orders-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.vm-order-card {
+    background-color: var(--madero-card-bg);
+    border: 1px solid var(--madero-border);
+    border-radius: 12px;
+    padding: 1.05rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+}
+
+.vm-order-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.vm-order-code {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--madero-dark);
+}
+
+.vm-order-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.vm-badge-type {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+}
+
+.vm-badge-delivery {
+    background-color: #d47628;
+    color: #ffffff;
+}
+
+.vm-badge-takeout {
+    background-color: #ece3d5;
+    color: #4a3525;
+}
+
+.vm-badge-status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    background-color: #fef3e2;
+    color: #c67d28;
+}
+
+.vm-order-customer {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--madero-dark);
+    margin-bottom: 0.1rem;
+}
+
+.vm-order-meta {
+    font-size: 0.78rem;
+    color: #786d65;
+    line-height: 1.35;
+}
+
+.vm-order-card-footer {
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid #ece3d8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vm-order-total-label {
+    font-size: 0.78rem;
+    color: #786d65;
+}
+
+.vm-order-total-value {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+}
+
+/* --- Asistente Modal de 4 Pasos --- */
+.vm-modal-dialog-wide {
+    max-width: 780px !important;
+}
+
+.vm-wizard-step-label {
+    font-size: 0.78rem;
+    color: #786d65;
+    margin-top: 2px;
+}
+
+.vm-wizard-progress {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ece5db;
+}
+
+.vm-wizard-bar {
+    height: 4px;
+    border-radius: 999px;
+    background-color: #e4dcd0;
+    transition: background-color 0.2s ease;
+}
+
+.vm-wizard-bar.active {
+    background-color: #d47628;
+}
+
+/* --- Mapa Leaflet (Paso 1 Delivery) --- */
+.vm-leaflet-map {
+    width: 100%;
+    height: 210px;
+    border-radius: 10px;
+    border: 1px solid #dfd6c8;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.vm-map-helper {
+    font-size: 0.74rem;
+    color: #84776c;
+    margin-top: 5px;
+}
+
+.vm-pin-dot {
+    color: #d93025;
+    font-size: 1.65rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+    line-height: 1;
+    text-align: center;
+}
+
+/* --- Paso 2: Catálogo de Platos y Panel Pedido --- */
+.vm-step2-layout {
+    display: grid;
+    grid-template-columns: 1.15fr 0.95fr;
+    gap: 16px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .vm-step2-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.vm-step2-catalog {
+    max-height: 390px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.vm-step2-cat-block {
+    margin-bottom: 14px;
+}
+
+.vm-step2-cat-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4a3525;
+    margin-bottom: 8px;
+}
+
+.vm-step2-dish-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vm-step2-dish-item {
+    background-color: #fffdf9;
+    border: 1px solid #e5ddd0;
+    border-radius: 10px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.vm-step2-dish-item:hover {
+    border-color: #d47628;
+    background-color: #fcf7ef;
+}
+
+.vm-step2-dish-info {
+    min-width: 0;
+}
+
+.vm-step2-dish-name {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--madero-dark);
+}
+
+.vm-step2-dish-desc {
+    font-size: 0.72rem;
+    color: #84776c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+}
+
+.vm-step2-dish-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.vm-step2-dish-price {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+}
+
+.vm-step2-dish-indicator {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #d47628;
+    background-color: transparent;
+}
+
+.vm-step2-dish-indicator.has-qty {
+    background-color: #d47628;
+    color: #ffffff;
+    font-size: 0.72rem;
+}
+
+/* Panel derecho "Pedido" */
+.vm-step2-cart {
+    background-color: #f6f0e6;
+    border: 1px solid #e4dacb;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    min-height: 290px;
+}
+
+.vm-step2-cart-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+    margin-bottom: 10px;
+}
+
+.vm-step2-cart-items {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.vm-cart-empty {
+    font-size: 0.78rem;
+    color: #84776c;
+    text-align: center;
+    padding: 2.2rem 0.75rem;
+}
+
+.vm-cart-row {
+    background-color: #fdfaf5;
+    border: 1px solid #e6ddd0;
+    border-radius: 9px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.vm-cart-row-name {
+    font-size: 0.79rem;
+    font-weight: 600;
+    color: var(--madero-dark);
+    line-height: 1.25;
+}
+
+.vm-cart-row-unit {
+    font-size: 0.71rem;
+    color: #84776c;
+}
+
+.vm-cart-row-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.vm-qty-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid #dfd5c7;
+    background-color: #f5efe6;
+    color: #38261b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.vm-qty-btn:hover {
+    background-color: #e9dfd1;
+}
+
+.vm-qty-val {
+    min-width: 18px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+}
+
+.vm-qty-del {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: none;
+    background-color: #fde8e6;
+    color: #c53929;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 2px;
+}
+
+.vm-qty-del:hover {
+    background-color: #f8d2ce;
+}
+
+.vm-step2-cart-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #dfd5c6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #6b5e54;
+}
+
+.vm-step2-cart-footer strong {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+}
+
+/* --- Paso 3: Selección de Método de Pago --- */
+.vm-step3-prompt {
+    font-size: 0.84rem;
+    color: #6b5e54;
+    margin-bottom: 12px;
+}
+
+.vm-payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.vm-payment-option {
+    background-color: #f6f1e9;
+    border: 1.5px solid #e2d9cc;
+    border-radius: 10px;
+    padding: 14px 10px;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #38261b;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vm-payment-option:hover {
+    border-color: #d47628;
+}
+
+.vm-payment-option.active {
+    background-color: #f5e6d6;
+    border-color: #d47628;
+    color: #231710;
+}
+
+/* --- Paso 4: Resumen del Pedido --- */
+.vm-summary-card {
+    background-color: #fbf7f0;
+    border: 1px solid #e5dcd0;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.vm-summary-heading {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #786d65;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.vm-summary-client-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+    margin-bottom: 2px;
+}
+
+.vm-summary-meta {
+    font-size: 0.8rem;
+    color: #6b5e54;
+    line-height: 1.4;
+}
+
+.vm-summary-payment {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--madero-dark);
+    margin-top: 4px;
+}
+
+.vm-summary-edit-link {
+    background: transparent;
+    border: none;
+    color: #58351f;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+}
+
+.vm-summary-edit-link:hover {
+    text-decoration: underline;
+}
+
+.vm-summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.vm-summary-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    color: var(--madero-dark);
+}
+
+.vm-summary-item-price {
+    color: #6b5e54;
+    font-weight: 500;
+}
+
+.vm-summary-total-row {
+    padding-top: 10px;
+    border-top: 1px solid #e4dacb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #6b5e54;
+}
+
+.vm-summary-total-row strong {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--madero-dark);
+}
+/* Sprint 2: HU-03 (salón) y HU-14 (rutas) */
+.vm-tables-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
+.vm-table-tile { background:#fff; border:1px solid var(--madero-border); border-radius:14px; min-height:210px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.2rem; box-shadow:0 4px 16px #3c24110c; }
+.vm-table-occupied { background:#f5f0ec; }
+.vm-table-icon { color:var(--madero-primary); font-size:2rem; }
+.vm-table-number { font:700 1.6rem Georgia,serif; margin:.55rem 0 .3rem; }
+.vm-table-state { font-size:.9rem; font-weight:600; }
+.vm-tag-salon { font:600 .78rem Inter,sans-serif; background:var(--madero-soft); padding:.35rem .55rem; border-radius:30px; vertical-align:middle; }
+.vm-salon-customer { max-width:480px; margin:1rem 0 1.3rem; }
+.vm-salon-layout { align-items:start; }
+.vm-salon-cart { position:sticky; top:1rem; }
+.vm-salon-dish { cursor:default; }
+.vm-salon-add { background:var(--madero-accent); border:0; border-radius:50%; color:#fff; font-size:1rem; width:29px; height:29px; flex-shrink:0; }
+.vm-salon-add:hover { background:var(--madero-primary); }
+.vm-salon-indicator { min-width:21px; font-weight:700; color:#7f756b; text-align:center; }
+.vm-salon-indicator.has-qty { color:var(--madero-accent); }
+.vm-confirmation-card { max-width:560px; margin:5rem auto; background:white; border:1px solid var(--madero-border); border-radius:18px; box-shadow:0 8px 28px #3c241118; padding:2.5rem; text-align:center; }
+.vm-confirmation-card h1 { font:700 1.6rem Georgia,serif; color:var(--madero-primary); }
+.vm-confirmation-card .vm-btn-save { display:inline-block; margin-top:1.25rem; }
+.vm-confirmation-icon { font-size:3rem; color:#2d8a4b; }
+.vm-route-counter { background:white; border:1px solid var(--madero-border); border-radius:10px; min-width:83px; padding:.5rem 1rem; text-align:center; }
+.vm-route-counter small { display:block; color:#756a61; }
+.vm-route-counter strong { display:block; font-size:1.25rem; color:var(--madero-primary); }
+.vm-route-tabs { display:flex; flex-wrap:wrap; gap:1.25rem; border-bottom:1px solid var(--madero-border); padding-bottom:.75rem; }
+.vm-route-tabs a { color:var(--madero-primary); text-decoration:none; font-weight:600; }
+.vm-section-heading { font:700 1.25rem Georgia,serif; margin:1.2rem 0; }
+.vm-dispatch-card { background:white; border:1px solid var(--madero-border); border-radius:13px; margin-bottom:1rem; padding:1.25rem; }
+.vm-dispatch-heading { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; border-bottom:1px solid var(--madero-border); padding-bottom:.8rem; margin-bottom:.8rem; }
+.vm-dispatch-heading strong:last-child { margin-left:auto; }
+.vm-route-badge { font-size:.8rem; border-radius:14px; background:#f6ead8; color:#85511f; padding:.25rem .55rem; }
+.vm-route-active { background:#e0f1e2; color:#246b3b; }
+.vm-route-meta { color:#655d55; font-size:.9rem; overflow-wrap:anywhere; }
+.vm-route-details { background:var(--madero-card-bg); padding:.8rem; border:1px solid var(--madero-border); border-radius:9px; }
+.vm-route-details summary { cursor:pointer; font-weight:600; }
+.vm-route-details[open] summary { margin-bottom:.8rem; }
+.vm-route-details p { margin-bottom:.35rem; }
+.vm-topbar-actions { display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+.vm-topbar-nav-link { color:#f7eade; text-decoration:none; font-size:.84rem; font-weight:600; white-space:nowrap; }
+.vm-topbar-nav-link:hover { color:white; }
+@media (max-width:700px) { .vm-salon-cart { position:static; } .vm-topbar-inner { flex-wrap:wrap; gap:1rem; } .vm-topbar-actions { justify-content:flex-start; } }

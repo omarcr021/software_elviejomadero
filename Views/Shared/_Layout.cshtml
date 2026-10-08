@@ -1,3 +1,16 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<software_elviejomadero.Models.ApplicationUser> UserManager
+@{
+    string currentUserFullName = "";
+    if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        var appUser = await UserManager.GetUserAsync(User);
+        if (appUser != null && !User.IsInRole("Administrador"))
+        {
+            currentUserFullName = appUser.FullName;
+        }
+    }
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -30,19 +43,38 @@
                                   User.IsInRole("Mozo") ? "Mozo" :
                                   User.IsInRole("Cocinero") ? "Cocinero" :
                                   User.IsInRole("Recepcionista") ? "Recepcionista" :
-                                  User.IsInRole("Repartidor") ? "Repartidor" : "Colaborador") &middot;
+                                  User.IsInRole("Repartidor") ? "Repartidor" : "Colaborador") &middot; @currentUserFullName
                             </span>
                         }
                     </div>
                 </a>
 
-                <div class="d-flex align-items-center">
+                <div class="vm-topbar-actions">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @if (User.IsInRole("Mozo") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="SalonOrder" asp-action="Index">Salón</a>
+                        }
+                        @if (User.IsInRole("Recepcionista") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="ReceptionOrder" asp-action="Index">Recepción</a>
+                        }
+                        @if (User.IsInRole("Cocinero") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="KitchenDispatch" asp-action="Index">Cocina</a>
+                        }
+                        @if (User.IsInRole("Repartidor") || User.IsInRole("Administrador"))
+                        {
+                            <a class="vm-topbar-nav-link" asp-controller="DeliveryRoute" asp-action="Index">Reparto</a>
+                        }
+                    }
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="vm-logout-link">
-                                Salir
+                                <i class="bi bi-box-arrow-right me-1"></i> Salir
                             </button>
                         </form>
                     }
