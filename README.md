@@ -229,8 +229,3 @@ En estricto apego al alcance del Sprint 1 y a la metodología Agile Scrum, las s
 - **HU-18: Editar Usuario** (los botones de edición y desactivación en la tabla de empleados están inhabilitados).
 - HU-02 a HU-15 (Toma de pedidos en mesa, asignación de mesas, comanda digital de cocina, despacho de comandas, delivery, seguimiento de motorizados, facturación y reportes estadísticos).
 - Módulos de clientes, inventarios avanzados y auditorías externas.
----
-
-## Sprint 2 — HU-03 y HU-14
-
-Consulta [SPRINT2_HU03_HU14.md](SPRINT2_HU03_HU14.md) para los pasos de validación, las dependencias y las rutas del nuevo desarrollo.
