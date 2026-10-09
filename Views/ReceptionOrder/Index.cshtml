@@ -272,6 +272,8 @@
         let cart = []; // [{ dishId, name, price, quantity }]
         let leafletMap = null;
         let deliveryMarker = null;
+        let geocodeDebounceTimer = null;
+        let lastGeocodedQuery = '';
 
         // Coordenadas iniciales en Lima (Av. Javier Prado / San Isidro - La Molina)
         const defaultLat = -12.0864;
@@ -281,6 +283,8 @@
             currentOrderType = orderType;
             currentStep = 1;
             cart = [];
+            lastGeocodedQuery = '';
+            clearTimeout(geocodeDebounceTimer);
 
             // Reiniciar campos del formulario
             document.getElementById('receptionOrderForm').reset();
@@ -341,10 +345,10 @@
                 leafletMap.removeLayer(deliveryMarker);
                 deliveryMarker = null;
             }
-            document.getElementById('mapHelperText').textContent = 'Toca el mapa para colocar el pin donde vive el cliente.';
+            document.getElementById('mapHelperText').textContent = 'Escribe la dirección arriba para ubicar el pin automáticamente o toca el mapa.';
         }
 
-        function setDeliveryPin(lat, lng) {
+        function setDeliveryPin(lat, lng, panMap = false) {
             document.getElementById('inputLatitude').value = lat.toFixed(6);
             document.getElementById('inputLongitude').value = lng.toFixed(6);
 
@@ -366,9 +370,94 @@
                 deliveryMarker.setLatLng([lat, lng]);
             }
 
-            document.getElementById('mapHelperText').textContent = 'Toca el mapa para mover el pin de entrega.';
+            if (panMap && leafletMap) {
+                leafletMap.flyTo([lat, lng], 16, { duration: 0.55 });
+            }
+
+            document.getElementById('mapHelperText').textContent = 'Ubicación localizada en el mapa. También puedes tocar el mapa para ajustar el pin.';
             hideValidationError();
         }
+
+        async function fetchCoordinatesFromOSM(searchQuery) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=pe&limit=1&viewbox=-77.20,-11.75,-76.80,-12.35&bounded=0&q=${encodeURIComponent(searchQuery)}`;
+            const response = await fetch(url, {
+                headers: { 'Accept-Language': 'es' }
+            });
+            if (!response.ok) return null;
+            const results = await response.json();
+            if (results && results.length > 0) {
+                return {
+                    lat: parseFloat(results[0].lat),
+                    lng: parseFloat(results[0].lon)
+                };
+            }
+            return null;
+        }
+
+        async function geocodeDeliveryAddress(rawAddress) {
+            const cleaned = (rawAddress || '').trim();
+            if (cleaned.length < 4 || !leafletMap) return false;
+
+            const helperEl = document.getElementById('mapHelperText');
+            helperEl.textContent = 'Ubicando dirección automáticamente en el mapa...';
+
+            try {
+                const fullQuery = cleaned.toLowerCase().includes('lima')
+                    ? cleaned
+                    : `${cleaned}, Lima, Perú`;
+
+                let coords = await fetchCoordinatesFromOSM(fullQuery);
+
+                // Fallback: si tiene número de puerta no indexado en OSM (ej. "Av. Javier Prado 1256"), buscar por nombre de vía
+                if (!coords) {
+                    const streetOnly = cleaned.replace(/\b\d+\b/g, '').replace(/\s+/g, ' ').trim();
+                    if (streetOnly.length >= 4 && streetOnly !== cleaned) {
+                        coords = await fetchCoordinatesFromOSM(`${streetOnly}, Lima, Perú`);
+                    }
+                }
+
+                if (coords && !isNaN(coords.lat) && !isNaN(coords.lng)) {
+                    lastGeocodedQuery = cleaned;
+                    setDeliveryPin(coords.lat, coords.lng, true);
+                    return true;
+                }
+            } catch (err) {
+                console.warn('No se pudo geocodificar la dirección:', err);
+            }
+
+            // Si aún no hay pin colocado, colocarlo en la vista actual para no bloquear al usuario
+            if (!document.getElementById('inputLatitude').value && leafletMap) {
+                const center = leafletMap.getCenter();
+                setDeliveryPin(center.lat, center.lng, false);
+            } else {
+                helperEl.textContent = 'Toca el mapa si deseas ajustar el pin de entrega.';
+            }
+            return false;
+        }
+
+        // Escuchar escritura en el campo Dirección de entrega para ubicar automáticamente en el mapa
+        document.addEventListener('DOMContentLoaded', function () {
+            const addressInput = document.getElementById('inputDeliveryAddress');
+            if (addressInput) {
+                addressInput.addEventListener('input', function () {
+                    clearTimeout(geocodeDebounceTimer);
+                    const val = this.value.trim();
+                    if (val.length < 4) return;
+
+                    geocodeDebounceTimer = setTimeout(() => {
+                        geocodeDeliveryAddress(val);
+                    }, 450);
+                });
+
+                addressInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        clearTimeout(geocodeDebounceTimer);
+                        geocodeDeliveryAddress(this.value);
+                    }
+                });
+            }
+        });
 
         function addDishToCart(dishId, name, price) {
             const existing = cart.find(i => i.dishId === dishId);
@@ -458,7 +547,7 @@
             });
         }
 
-        function validateCurrentStep() {
+        async function validateCurrentStep() {
             if (currentStep === 1) {
                 const name = document.getElementById('inputCustomerName').value.trim();
                 const phone = document.getElementById('inputCustomerPhone').value.trim();
@@ -474,13 +563,22 @@
 
                 if (currentOrderType === 'Delivery') {
                     const address = document.getElementById('inputDeliveryAddress').value.trim();
-                    const lat = document.getElementById('inputLatitude').value;
-                    const lng = document.getElementById('inputLongitude').value;
-
                     if (!address) {
                         showValidationError('El pedido de delivery requiere ingresar la dirección de entrega.');
                         return false;
                     }
+
+                    let lat = document.getElementById('inputLatitude').value;
+                    let lng = document.getElementById('inputLongitude').value;
+
+                    // Si el usuario escribió la dirección y presionó Siguiente enseguida, ubicar automáticamente
+                    if (!lat || !lng || lastGeocodedQuery !== address) {
+                        clearTimeout(geocodeDebounceTimer);
+                        await geocodeDeliveryAddress(address);
+                        lat = document.getElementById('inputLatitude').value;
+                        lng = document.getElementById('inputLongitude').value;
+                    }
+
                     if (!lat || !lng) {
                         showValidationError('Por favor, ubica el pin de entrega en el mapa antes de continuar.');
                         return false;
@@ -503,8 +601,9 @@
             return true;
         }
 
-        function nextWizardStep() {
-            if (!validateCurrentStep()) return;
+        async function nextWizardStep() {
+            const isValid = await validateCurrentStep();
+            if (!isValid) return;
 
             if (currentStep < 4) {
                 currentStep += 1;
