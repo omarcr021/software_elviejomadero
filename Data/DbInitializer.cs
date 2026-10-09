@@ -75,6 +75,38 @@ namespace software_elviejomadero.Data
                     logger.LogInformation("Rol creado: {Role}", roleName);
                 }
             }
+            // Recuperación controlada del administrador mediante Render
+            var recoveryPassword =
+                Environment.GetEnvironmentVariable("ADMIN_RECOVERY_PASSWORD");
+
+            if (!string.IsNullOrWhiteSpace(recoveryPassword))
+            {
+                var admin = await userManager.FindByNameAsync("admin");
+
+                if (admin == null)
+                {
+                    throw new InvalidOperationException(
+                        "No existe el administrador para recuperar.");
+                }
+
+                if (!await userManager.CheckPasswordAsync(admin, recoveryPassword))
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(admin);
+
+                    var reset = await userManager.ResetPasswordAsync(
+                        admin, token, recoveryPassword);
+
+                    if (!reset.Succeeded)
+                    {
+                        throw new InvalidOperationException(
+                            "No se pudo recuperar la contraseña: " +
+                            string.Join(", ", reset.Errors.Select(e => e.Description)));
+                    }
+                }
+
+                logger.LogInformation(
+                    "Contraseña del administrador recuperada correctamente.");
+            }
 
             // 3. Sembrar Usuario Administrador Inicial
             var adminUser = await userManager.FindByNameAsync("admin");
