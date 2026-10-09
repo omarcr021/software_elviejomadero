@@ -75,6 +75,35 @@ namespace software_elviejomadero.Data
                     logger.LogInformation("Rol creado: {Role}", roleName);
                 }
             }
+            // 3. Sembrar Usuario Administrador Inicial
+            var adminUser = await userManager.FindByNameAsync("admin");
+            if (adminUser == null)
+            {
+                adminUser = new ApplicationUser
+                {
+                    UserName = "admin",
+                    Email = "admin@elviejomadero.com",
+                    FullName = "Administrador El Viejo Madero",
+                    DNI = "00000000",
+                    Phone = "999999999",
+                    IsActive = true,
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createResult = await userManager.CreateAsync(adminUser, "Admin123*!");
+                if (createResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Administrador");
+                    logger.LogInformation("Usuario Administrador inicial creado con éxito.");
+                }
+                else
+                {
+                    logger.LogError("Error al crear usuario administrador inicial: {Errors}",
+                        string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                }
+            }
+
             // Recuperación controlada del administrador mediante Render
             var recoveryPassword =
                 Environment.GetEnvironmentVariable("ADMIN_RECOVERY_PASSWORD");
@@ -108,35 +137,6 @@ namespace software_elviejomadero.Data
                     "Contraseña del administrador recuperada correctamente.");
             }
 
-            // 3. Sembrar Usuario Administrador Inicial
-            var adminUser = await userManager.FindByNameAsync("admin");
-            if (adminUser == null)
-            {
-                adminUser = new ApplicationUser
-                {
-                    UserName = "admin",
-                    Email = "admin@elviejomadero.com",
-                    FullName = "Administrador El Viejo Madero",
-                    DNI = "00000000",
-                    Phone = "999999999",
-                    IsActive = true,
-                    EmailConfirmed = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                var createResult = await userManager.CreateAsync(adminUser, "Admin123*!");
-                if (createResult.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(adminUser, "Administrador");
-                    logger.LogInformation("Usuario Administrador inicial creado con éxito (admin / Admin123*!).");
-                }
-                else
-                {
-                    logger.LogError("Error al crear usuario administrador inicial: {Errors}",
-                        string.Join(", ", createResult.Errors.Select(e => e.Description)));
-                }
-            }
-
             // 3b. Sembrar Usuario Recepcionista Inicial del Prototipo (Lucía Vega - lvega / Recepcion123*!)
             var recepUser = await userManager.FindByNameAsync("lvega");
             if (recepUser == null && !await context.Users.AnyAsync(u => u.DNI == "71234567"))
@@ -157,7 +157,7 @@ namespace software_elviejomadero.Data
                 if (createRecepResult.Succeeded)
                 {
                     await userManager.AddToRoleAsync(recepUser, "Recepcionista");
-                    logger.LogInformation("Usuario Recepcionista inicial creado con éxito (lvega / Recepcion123*!).");
+                    logger.LogInformation("Usuario Recepcionista inicial creado con éxito.");
                 }
             }
 
