@@ -55,6 +55,16 @@ namespace software_elviejomadero.Data
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
             ");
 
+            // HU-03: sembrar mesas solo cuando el restaurante aún no tenga ninguna.
+            if (!await context.RestaurantTables.AnyAsync())
+            {
+                context.RestaurantTables.AddRange(Enumerable.Range(1, 8).Select(i => new RestaurantTable
+                {
+                    Number = $"M{i}", Status = TableStatuses.Free, IsActive = true
+                }));
+                await context.SaveChangesAsync();
+            }
+
             // 2. Sembrar Roles requeridos para El Viejo Madero
             string[] roles = ["Administrador", "Mozo", "Cocinero", "Recepcionista", "Repartidor"];
             foreach (var roleName in roles)
@@ -65,7 +75,6 @@ namespace software_elviejomadero.Data
                     logger.LogInformation("Rol creado: {Role}", roleName);
                 }
             }
-
             // 3. Sembrar Usuario Administrador Inicial
             var adminUser = await userManager.FindByNameAsync("admin");
             if (adminUser == null)
@@ -86,13 +95,46 @@ namespace software_elviejomadero.Data
                 if (createResult.Succeeded)
                 {
                     await userManager.AddToRoleAsync(adminUser, "Administrador");
-                    logger.LogInformation("Usuario Administrador inicial creado con éxito (admin / Admin123*!).");
+                    logger.LogInformation("Usuario Administrador inicial creado con éxito.");
                 }
                 else
                 {
                     logger.LogError("Error al crear usuario administrador inicial: {Errors}",
                         string.Join(", ", createResult.Errors.Select(e => e.Description)));
                 }
+            }
+
+            // Recuperación controlada del administrador mediante Render
+            var recoveryPassword =
+                Environment.GetEnvironmentVariable("ADMIN_RECOVERY_PASSWORD");
+
+            if (!string.IsNullOrWhiteSpace(recoveryPassword))
+            {
+                var admin = await userManager.FindByNameAsync("admin");
+
+                if (admin == null)
+                {
+                    throw new InvalidOperationException(
+                        "No existe el administrador para recuperar.");
+                }
+
+                if (!await userManager.CheckPasswordAsync(admin, recoveryPassword))
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(admin);
+
+                    var reset = await userManager.ResetPasswordAsync(
+                        admin, token, recoveryPassword);
+
+                    if (!reset.Succeeded)
+                    {
+                        throw new InvalidOperationException(
+                            "No se pudo recuperar la contraseña: " +
+                            string.Join(", ", reset.Errors.Select(e => e.Description)));
+                    }
+                }
+
+                logger.LogInformation(
+                    "Contraseña del administrador recuperada correctamente.");
             }
 
             // 3b. Sembrar Usuario Recepcionista Inicial del Prototipo (Lucía Vega - lvega / Recepcion123*!)
@@ -115,7 +157,7 @@ namespace software_elviejomadero.Data
                 if (createRecepResult.Succeeded)
                 {
                     await userManager.AddToRoleAsync(recepUser, "Recepcionista");
-                    logger.LogInformation("Usuario Recepcionista inicial creado con éxito (lvega / Recepcion123*!).");
+                    logger.LogInformation("Usuario Recepcionista inicial creado con éxito.");
                 }
             }
 

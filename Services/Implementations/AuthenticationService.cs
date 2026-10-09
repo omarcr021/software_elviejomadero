@@ -56,10 +56,27 @@ namespace software_elviejomadero.Services.Implementations
             }
 
             // 3. Validar contraseña mediante SignInManager
-            var checkPassword = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
+            var checkPassword = await _signInManager.CheckPasswordSignInAsync(
+                user,
+                password,
+                lockoutOnFailure: false
+            );
+
             if (!checkPassword.Succeeded)
             {
-                _logger.LogWarning("Contraseña incorrecta para el usuario: {UserName}", userName);
+                // Diagnóstico seguro: no registrar contraseñas ni hashes
+                bool passwordCoincide = await _userManager.CheckPasswordAsync(
+                    user, password
+                );
+
+                _logger.LogWarning(
+                    "Login rechazado: {UserName}. PasswordCoincide={Coincide}, Bloqueado={Bloqueado}, NoPermitido={NoPermitido}",
+                    user.UserName,
+                    passwordCoincide,
+                    checkPassword.IsLockedOut,
+                    checkPassword.IsNotAllowed
+                );
+
                 return new LoginServiceResult
                 {
                     Status = LoginResultStatus.InvalidCredentials,
