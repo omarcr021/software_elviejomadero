@@ -16,7 +16,8 @@ namespace software_elviejomadero.Services.Implementations
             var orders = await _context.Orders.AsNoTracking().Include(o => o.Items)
                 .Where(o => o.OrderType == OrderTypes.Delivery &&
                     (o.Status == OrderStatuses.ReadyForDispatch ||
-                     (o.Status == OrderStatuses.OnTheWay && o.DeliveryDriverId == driverId)))
+                     (o.Status == OrderStatuses.OnTheWay && o.DeliveryDriverId == driverId) ||
+                     (o.Status == OrderStatuses.Delivered && o.DeliveryDriverId == driverId)))
                 .OrderByDescending(o => o.CreatedAt).ToListAsync();
 
             DispatchOrderViewModel ToCard(Order o) => new()
@@ -25,6 +26,11 @@ namespace software_elviejomadero.Services.Implementations
                 CustomerName = o.CustomerName, Address = o.DeliveryAddress ?? string.Empty,
                 Phone = o.CustomerPhone, ItemsCount = o.TotalItemsCount,
                 Total = o.TotalAmount, RouteStartedAt = o.RouteStartedAt,
+                DeliveredAt = o.DeliveredAt,
+                DeliveryNote = o.DeliveryNote,
+                DeliveryDurationMinutes = (o.RouteStartedAt.HasValue && o.DeliveredAt.HasValue)
+                    ? (int?)Math.Max(1, (int)Math.Round((o.DeliveredAt.Value - o.RouteStartedAt.Value).TotalMinutes))
+                    : null,
                 Items = o.Items.Select(i => new DispatchItemViewModel
                 {
                     Name = i.DishName, Quantity = i.Quantity, UnitPrice = i.UnitPrice
@@ -34,7 +40,10 @@ namespace software_elviejomadero.Services.Implementations
             return new DeliveryRouteDashboardViewModel
             {
                 Ready = orders.Where(o => o.Status == OrderStatuses.ReadyForDispatch).Select(ToCard).ToList(),
-                InRoute = orders.Where(o => o.Status == OrderStatuses.OnTheWay).Select(ToCard).ToList()
+                InRoute = orders.Where(o => o.Status == OrderStatuses.OnTheWay).Select(ToCard).ToList(),
+                History = orders.Where(o => o.Status == OrderStatuses.Delivered)
+                    .OrderByDescending(o => o.DeliveredAt ?? o.CreatedAt)
+                    .Select(ToCard).ToList()
             };
         }
 
@@ -62,6 +71,39 @@ namespace software_elviejomadero.Services.Implementations
             catch (DbUpdateConcurrencyException)
             {
                 return (false, "El pedido fue aceptado o actualizado por otra persona. Recarga la pantalla.");
+            }
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ConfirmDeliveryAsync(int orderId, string driverId, string? deliveryNote)
+        {
+            if (string.IsNullOrWhiteSpace(driverId) || !await _context.Users.AnyAsync(u => u.Id == driverId && u.IsActive))
+                return (false, "El repartidor no está disponible o no se encuentra autenticado.");
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            if (order == null || order.OrderType != OrderTypes.Delivery)
+                return (false, "El pedido de delivery no existe.");
+
+            if (order.Status == OrderStatuses.Delivered)
+                return (false, "Una vez confirmada la entrega, el pedido no puede modificarse.");
+
+            if (order.Status != OrderStatuses.OnTheWay)
+                return (false, "Solo se puede confirmar la entrega de los pedidos en estado 'En camino'.");
+
+            if (order.DeliveryDriverId != driverId)
+                return (false, "Solo el repartidor que aceptó el pedido puede confirmar su entrega.");
+
+            order.Status = OrderStatuses.Delivered;
+            order.DeliveredAt = DateTime.UtcNow;
+            order.DeliveryNote = string.IsNullOrWhiteSpace(deliveryNote) ? null : deliveryNote.Trim();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return (true, null);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return (false, "El pedido fue actualizado por otro proceso. Recarga la pantalla.");
             }
         }
 

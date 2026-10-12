@@ -18,6 +18,9 @@ namespace software_elviejomadero.ViewModels
         public int ItemsCount { get; set; }
         public decimal Total { get; set; }
         public DateTime? RouteStartedAt { get; set; }
+        public DateTime? DeliveredAt { get; set; }
+        public string? DeliveryNote { get; set; }
+        public int? DeliveryDurationMinutes { get; set; }
         public List<DispatchItemViewModel> Items { get; set; } = new();
     }
 
@@ -25,5 +28,12 @@ namespace software_elviejomadero.ViewModels
     {
         public List<DispatchOrderViewModel> Ready { get; set; } = new();
         public List<DispatchOrderViewModel> InRoute { get; set; } = new();
+        public List<DispatchOrderViewModel> History { get; set; } = new();
+    }
+
+    public class ConfirmDeliveryInputModel
+    {
+        public int OrderId { get; set; }
+        public string? DeliveryNote { get; set; }
     }
 }

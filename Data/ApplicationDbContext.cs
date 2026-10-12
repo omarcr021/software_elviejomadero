@@ -65,6 +65,7 @@ namespace software_elviejomadero.Data
                 entity.Property(o => o.CustomerPhone).IsRequired().HasMaxLength(20);
                 entity.Property(o => o.PaymentMethod).IsRequired().HasMaxLength(30);
                 entity.Property(o => o.TotalAmount).HasPrecision(10, 2);
+                entity.Property(o => o.DeliveryNote).HasMaxLength(500);
 
                 entity.HasIndex(o => o.TableId);
                 entity.HasIndex(o => o.DeliveryDriverId);

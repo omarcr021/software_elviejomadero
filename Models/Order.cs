@@ -16,6 +16,7 @@ namespace software_elviejomadero.Models
         public const string InKitchen = "En cocina";
         public const string ReadyForDispatch = "Listo para despacho";
         public const string OnTheWay = "En camino";
+        public const string Delivered = "Entregado";
     }
 
     public static class PaymentMethods
@@ -80,6 +81,12 @@ namespace software_elviejomadero.Models
         public string? DeliveryDriverId { get; set; }
         public ApplicationUser? DeliveryDriver { get; set; }
         public DateTime? RouteStartedAt { get; set; }
+
+        // HU-15: Confirmación de entrega
+        public DateTime? DeliveredAt { get; set; }
+
+        [MaxLength(500)]
+        public string? DeliveryNote { get; set; }
 
         [Required]
         public string ReceptionistId { get; set; } = string.Empty;

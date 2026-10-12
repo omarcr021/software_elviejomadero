@@ -100,5 +100,87 @@ namespace software_elviejomadero.Tests
             Assert.Empty((await service.GetDashboardAsync("waiter")).InRoute);
             Assert.Single((await service.GetDashboardAsync("driver")).InRoute);
         }
+
+        [Fact]
+        public async Task Route_ConfirmDelivery_SucceedsAndMovesToHistoryWithNoteAndDuration()
+        {
+            using var db = Context();
+            var order = Delivery(OrderStatuses.OnTheWay);
+            order.DeliveryDriverId = "driver";
+            order.RouteStartedAt = DateTime.UtcNow.AddMinutes(-25);
+            db.Orders.Add(order);
+            await db.SaveChangesAsync();
+
+            var service = new DeliveryRouteService(db);
+            var result = await service.ConfirmDeliveryAsync(order.Id, "driver", "Entregado conforme en recepción");
+
+            Assert.True(result.Succeeded, result.ErrorMessage);
+            var updatedOrder = await db.Orders.FindAsync(order.Id);
+            Assert.NotNull(updatedOrder);
+            Assert.Equal(OrderStatuses.Delivered, updatedOrder!.Status);
+            Assert.NotNull(updatedOrder.DeliveredAt);
+            Assert.Equal("Entregado conforme en recepción", updatedOrder.DeliveryNote);
+
+            var dashboard = await service.GetDashboardAsync("driver");
+            Assert.Empty(dashboard.InRoute);
+            Assert.Single(dashboard.History);
+            var historyItem = dashboard.History[0];
+            Assert.Equal(order.OrderCode, historyItem.Code);
+            Assert.Equal("Entregado conforme en recepción", historyItem.DeliveryNote);
+            Assert.NotNull(historyItem.DeliveryDurationMinutes);
+            Assert.True(historyItem.DeliveryDurationMinutes >= 24);
+        }
+
+        [Fact]
+        public async Task Route_ConfirmDelivery_RejectsIfNotInRouteOrDifferentDriver()
+        {
+            using var db = Context();
+            var orderReady = Delivery(OrderStatuses.ReadyForDispatch);
+            var orderInRoute = Delivery(OrderStatuses.OnTheWay);
+            orderInRoute.OrderCode = "#D16";
+            orderInRoute.DeliveryDriverId = "driver";
+            orderInRoute.RouteStartedAt = DateTime.UtcNow.AddMinutes(-10);
+            db.Orders.AddRange(orderReady, orderInRoute);
+            await db.SaveChangesAsync();
+
+            var service = new DeliveryRouteService(db);
+
+            // Rejects if not on the way (e.g. still ReadyForDispatch)
+            var resultNotOnTheWay = await service.ConfirmDeliveryAsync(orderReady.Id, "driver", "Nota");
+            Assert.False(resultNotOnTheWay.Succeeded);
+
+            // Rejects if different driver
+            var resultWrongDriver = await service.ConfirmDeliveryAsync(orderInRoute.Id, "waiter", "Nota");
+            Assert.False(resultWrongDriver.Succeeded);
+            Assert.Contains("repartidor que aceptó el pedido", resultWrongDriver.ErrorMessage ?? "");
+
+            // Order remains unchanged
+            var notChanged = await db.Orders.FindAsync(orderInRoute.Id);
+            Assert.Equal(OrderStatuses.OnTheWay, notChanged!.Status);
+            Assert.Null(notChanged.DeliveredAt);
+        }
+
+        [Fact]
+        public async Task Route_ConfirmDelivery_CannotModifyAlreadyDeliveredOrder()
+        {
+            using var db = Context();
+            var order = Delivery(OrderStatuses.OnTheWay);
+            order.DeliveryDriverId = "driver";
+            order.RouteStartedAt = DateTime.UtcNow.AddMinutes(-15);
+            db.Orders.Add(order);
+            await db.SaveChangesAsync();
+
+            var service = new DeliveryRouteService(db);
+            var firstConfirm = await service.ConfirmDeliveryAsync(order.Id, "driver", "Primera entrega");
+            Assert.True(firstConfirm.Succeeded);
+
+            // Second confirmation must be rejected
+            var secondConfirm = await service.ConfirmDeliveryAsync(order.Id, "driver", "Intento duplicado");
+            Assert.False(secondConfirm.Succeeded);
+
+            // Cannot re-start route either
+            var reStart = await service.StartRouteAsync(order.Id, "driver");
+            Assert.False(reStart.Succeeded);
+        }
     }
 }

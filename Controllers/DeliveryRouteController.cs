@@ -29,5 +29,17 @@ namespace software_elviejomadero.Controllers
                 : result.ErrorMessage;
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmDelivery(int id, string? deliveryNote)
+        {
+            var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            var result = await _routes.ConfirmDeliveryAsync(id, driverId, deliveryNote);
+            TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded
+                ? "Entrega confirmada y registrada en el historial."
+                : result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

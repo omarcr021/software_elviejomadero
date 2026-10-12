@@ -1201,6 +1201,13 @@ body {
 .vm-dispatch-heading strong:last-child { margin-left:auto; }
 .vm-route-badge { font-size:.8rem; border-radius:14px; background:#f6ead8; color:#85511f; padding:.25rem .55rem; }
 .vm-route-active { background:#e0f1e2; color:#246b3b; }
+.vm-route-delivered { background:#e2f2e5; color:#1f6b35; font-weight:600; }
+.vm-modal-tag { display:inline-block; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:#85511f; margin-bottom:.35rem; }
+.vm-modal-subtitle { font-size:.88rem; color:#655d55; margin:.25rem 0 0; }
+.vm-delivery-summary-card { background-color:#f7f3ed; border:1px solid var(--madero-border); border-radius:10px; padding:1rem 1.15rem; margin-bottom:1.25rem; }
+.vm-delivery-summary-card p { margin-bottom:.4rem; font-size:.88rem; color:#40342b; }
+.vm-delivery-summary-card p:last-child { margin-bottom:0; }
+.vm-delivery-summary-total { font-weight:700; color:var(--madero-primary); font-size:1.05rem; }
 .vm-route-meta { color:#655d55; font-size:.9rem; overflow-wrap:anywhere; }
 .vm-route-details { background:var(--madero-card-bg); padding:.8rem; border:1px solid var(--madero-border); border-radius:9px; }
 .vm-route-details summary { cursor:pointer; font-weight:600; }
