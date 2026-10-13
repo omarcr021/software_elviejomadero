@@ -1,0 +1,52 @@
+@using software_elviejomadero.Models
+@model software_elviejomadero.ViewModels.KitchenOrderViewModel
+
+<article class="kc-card" data-order-id="@Model.Id">
+    <div class="kc-card-top">
+        <span class="kc-code">@Model.Code</span>
+        <span class="kc-time" title="Tiempo transcurrido desde que se envió a cocina">
+            <i class="bi bi-clock"></i>
+            <span data-created-ms="@Model.CreatedAtUnixMs">@Model.ElapsedText</span>
+        </span>
+    </div>
+
+    <div class="kc-origin">
+        <span class="kc-origin-label">
+            <i class="bi @(Model.Type == OrderType.Mesa ? "bi-inbox" : Model.Type == OrderType.ParaLlevar ? "bi-bag" : "bi-bicycle")"></i>
+            @Model.OriginLabel
+        </span>
+        <span class="kc-customer">@Model.CustomerName</span>
+    </div>
+
+    <ul class="kc-items">
+        @foreach (var item in Model.Items)
+        {
+            <li><span class="kc-qty">@item.Quantity×</span> @item.DishName</li>
+        }
+    </ul>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Note))
+    {
+        <div class="kc-note">@Model.Note</div>
+    }
+
+    @switch (Model.Status)
+    {
+        case OrderStatus.Nuevo:
+            <button type="button" class="kc-btn kc-btn-start" data-action="start" data-id="@Model.Id">
+                <i class="bi bi-fire"></i> Empezar preparación
+            </button>
+            break;
+        case OrderStatus.EnPreparacion:
+            <button type="button" class="kc-btn kc-btn-ready" data-action="ready" data-id="@Model.Id">
+                <i class="bi bi-check2-circle"></i> Marcar como listo
+            </button>
+            break;
+        case OrderStatus.Listo:
+            <div class="kc-ready-info">
+                <span class="kc-ready-badge"><i class="bi bi-check-circle-fill"></i> @Model.ReadyStatusLabel</span>
+                <span class="kc-responsible">Entrega: <strong>@Model.DeliveryResponsible</strong></span>
+            </div>
+            break;
+    }
+</article>
