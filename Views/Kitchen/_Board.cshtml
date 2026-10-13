@@ -1,0 +1,35 @@
+@model software_elviejomadero.ViewModels.KitchenBoardViewModel
+
+@{
+    var columns = new[]
+    {
+        (Title: "Nuevos",          Orders: Model.NewOrders,           Empty: "Sin comandas nuevas",      Css: "kc-icon-new",   Icon: "bi-clock"),
+        (Title: "En preparación",  Orders: Model.InPreparationOrders, Empty: "Nada en preparación",      Css: "kc-icon-prep",  Icon: "bi-fire"),
+        (Title: "Listos",          Orders: Model.ReadyOrders,         Empty: "Aún no hay platos listos", Css: "kc-icon-ready", Icon: "bi-check-circle")
+    };
+}
+
+<div class="kc-board" data-server-now="@Model.ServerNowUnixMs">
+    @foreach (var col in columns)
+    {
+        <section class="kc-column" aria-label="@col.Title">
+            <header class="kc-col-head">
+                <span class="kc-col-icon @col.Css"><i class="bi @col.Icon"></i></span>
+                <h2 class="kc-col-title">@col.Title</h2>
+                <span class="kc-count" aria-label="@col.Orders.Count pedidos">@col.Orders.Count</span>
+            </header>
+
+            @if (!col.Orders.Any())
+            {
+                <div class="kc-empty">@col.Empty</div>
+            }
+            else
+            {
+                foreach (var order in col.Orders)
+                {
+                    <partial name="_OrderCard" model="order" />
+                }
+            }
+        </section>
+    }
+</div>

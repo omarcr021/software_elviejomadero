@@ -24,6 +24,10 @@ namespace software_elviejomadero.Controllers
                 {
                     return RedirectToAction("Index", "Administration");
                 }
+                if (User.IsInRole("Cocinero"))
+                {
+                    return RedirectToAction("Index", "Kitchen");
+                }
                 return RedirectToAction("Index", "Home");
             }
 
@@ -57,7 +61,13 @@ namespace software_elviejomadero.Controllers
                     return RedirectToAction("Index", "Administration");
                 }
 
-                // Roles operativos (Mozo, Cocinero, Recepcionista, Repartidor)
+                // HU-09: el cocinero entra directo a la pantalla "Cocina - comandas"
+                if (result.Roles.Contains("Cocinero"))
+                {
+                    return RedirectToAction("Index", "Kitchen");
+                }
+
+                // Demás roles operativos (Mozo, Recepcionista, Repartidor)
                 return RedirectToAction("Index", "Home");
             }
 
