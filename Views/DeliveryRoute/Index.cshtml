@@ -1,199 +1,272 @@
 @model software_elviejomadero.ViewModels.DeliveryRouteDashboardViewModel
+@using System.Globalization
+@using software_elviejomadero.ViewModels
 @{
     ViewData["Title"] = "Despacho y rutas";
+    var active = Model.Active.ToList();
 }
 
 @functions {
-    private string FormatPeruTime(DateTime? utcTime)
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    private static string Money(decimal value) => "S/ " + value.ToString("F2", Inv);
+
+    private static DateTime ToPeru(DateTime utcTime)
+    {
+        var utc = DateTime.SpecifyKind(utcTime, DateTimeKind.Utc);
+        foreach (var id in new[] { "America/Lima", "SA Pacific Standard Time" })
+        {
+            try { return TimeZoneInfo.ConvertTimeFromUtc(utc, TimeZoneInfo.FindSystemTimeZoneById(id)); }
+            catch (TimeZoneNotFoundException) { }
+            catch (InvalidTimeZoneException) { }
+        }
+        return utc.AddHours(-5);
+    }
+
+    // 08:53 p. m.
+    private static string FormatTime(DateTime? utcTime)
     {
         if (!utcTime.HasValue) return "—";
-        try
-        {
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Lima");
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utcTime.Value, DateTimeKind.Utc), tz).ToString("dd/MM/yyyy HH:mm") + " (Perú)";
-        }
-        catch
-        {
-            try
-            {
-                var tz = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
-                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utcTime.Value, DateTimeKind.Utc), tz).ToString("dd/MM/yyyy HH:mm") + " (Perú)";
-            }
-            catch
-            {
-                return utcTime.Value.AddHours(-5).ToString("dd/MM/yyyy HH:mm") + " (Perú)";
-            }
-        }
+        var t = ToPeru(utcTime.Value);
+        var hour = t.Hour % 12 == 0 ? 12 : t.Hour % 12;
+        return $"{hour:00}:{t.Minute:00} {(t.Hour < 12 ? "a. m." : "p. m.")}";
+    }
+
+    private static string FormatPeruTime(DateTime? utcTime) =>
+        utcTime.HasValue ? ToPeru(utcTime.Value).ToString("dd/MM/yyyy HH:mm", Inv) + " (Perú)" : "—";
+
+    private static string MapUrl(DispatchOrderViewModel o)
+    {
+        var lat = o.Latitude!.Value; var lon = o.Longitude!.Value;
+        string N(double v) => v.ToString("0.00000", Inv);
+        return $"https://www.openstreetmap.org/export/embed.html?bbox={N(lon - 0.004)}%2C{N(lat - 0.003)}%2C{N(lon + 0.004)}%2C{N(lat + 0.003)}&layer=mapnik&marker={N(lat)}%2C{N(lon)}";
     }
 }
 
-<div class="vm-admin-wrapper">
-    <div class="vm-admin-header">
-        <div>
-            <h1 class="vm-page-title"><i class="bi bi-bicycle me-2"></i>Despacho y rutas</h1>
-            <p class="vm-page-subtitle">Gestiona pedidos listos, rutas activas y entregas.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <div class="vm-route-counter"><small>Pendientes</small><strong>@Model.Ready.Count</strong></div>
-            <div class="vm-route-counter"><small>En ruta</small><strong>@Model.InRoute.Count</strong></div>
-            <div class="vm-route-counter"><small>Historial</small><strong>@Model.History.Count</strong></div>
-        </div>
-    </div>
+<link rel="stylesheet" href="~/css/despacho-rutas.css" asp-append-version="true" />
 
-    <div class="vm-route-tabs">
-        <a href="#readyOrders">Despacho activo (@Model.Ready.Count)</a>
-        <a href="#routeOrders">En ruta (@Model.InRoute.Count)</a>
-        <a href="#historyOrders">Historial (@Model.History.Count)</a>
-        <a asp-action="Index">Actualizar</a>
-    </div>
-
-    <section id="readyOrders" class="mt-4">
-        <h2 class="vm-section-heading">Listos para despacho</h2>
-        @if (!Model.Ready.Any())
-        {
-            <div class="vm-empty-box">No hay pedidos listos para despacho.</div>
-        }
-        @foreach (var order in Model.Ready)
-        {
-            <article class="vm-dispatch-card">
-                <div class="vm-dispatch-heading">
-                    <strong>@order.Code</strong>
-                    <span class="vm-route-badge">Listo para despacho</span>
-                    <strong>S/ @order.Total.ToString("F2")</strong>
-                </div>
-                <p class="vm-route-meta">
-                    <i class="bi bi-person me-1"></i>@order.CustomerName 
-                    <i class="bi bi-geo-alt ms-3 me-1"></i>@order.Address 
-                    <i class="bi bi-basket ms-3 me-1"></i>@order.ItemsCount productos
-                </p>
-                <details class="vm-route-details">
-                    <summary>Ver detalle del pedido</summary>
-                    <p><strong>Teléfono:</strong> @order.Phone</p>
-                    <p><strong>Dirección:</strong> @order.Address</p>
-                    @foreach (var item in order.Items)
-                    {
-                        <p class="mb-1">@item.Quantity × @item.Name — S/ @item.UnitPrice.ToString("F2") c/u</p>
-                    }
-                    <p class="mt-2"><strong>Monto a cobrar:</strong> S/ @order.Total.ToString("F2")</p>
-                </details>
-                <form asp-action="Start" asp-route-id="@order.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <button class="vm-btn-save mt-3" type="submit">
-                        <i class="bi bi-sign-turn-right me-1"></i> Aceptar e iniciar ruta
-                    </button>
-                </form>
-            </article>
-        }
-    </section>
-
-    <section id="routeOrders" class="mt-4">
-        <h2 class="vm-section-heading">Mis pedidos en ruta</h2>
-        @if (!Model.InRoute.Any())
-        {
-            <div class="vm-empty-box">Aún no tienes pedidos en ruta.</div>
-        }
-        @foreach (var order in Model.InRoute)
-        {
-            <article class="vm-dispatch-card">
-                <div class="vm-dispatch-heading">
-                    <strong>@order.Code</strong>
-                    <span class="vm-route-badge vm-route-active">En camino</span>
-                    <strong>S/ @order.Total.ToString("F2")</strong>
-                </div>
-                <p class="vm-route-meta">@order.CustomerName — @order.Address — @order.ItemsCount productos</p>
-                <p class="small text-muted">Inicio de ruta: @FormatPeruTime(order.RouteStartedAt)</p>
-                <details class="vm-route-details mb-3">
-                    <summary>Ver detalle y contacto</summary>
-                    <p><strong>Cliente:</strong> @order.CustomerName</p>
-                    <p><strong>Teléfono:</strong> <a href="tel:@order.Phone">@order.Phone</a></p>
-                    <p><strong>Dirección:</strong> @order.Address</p>
-                    @foreach (var item in order.Items)
-                    {
-                        <p class="mb-1">@item.Quantity × @item.Name — S/ @item.UnitPrice.ToString("F2") c/u</p>
-                    }
-                    <p class="mt-2"><strong>Monto a cobrar:</strong> S/ @order.Total.ToString("F2")</p>
-                </details>
-                <button type="button" class="vm-btn-save" data-bs-toggle="modal" data-bs-target="#confirmDeliveryModal-@order.Id">
-                    <i class="bi bi-check-circle me-1"></i> Confirmar entrega
-                </button>
-            </article>
-
-            <!-- Modal Cierre de Ruta (HU-15) -->
-            <div class="modal fade" id="confirmDeliveryModal-@order.Id" tabindex="-1" aria-labelledby="confirmDeliveryModalLabel-@order.Id" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered vm-modal-dialog">
-                    <div class="modal-content vm-modal-card">
-                        <div class="vm-modal-header d-flex justify-content-between align-items-start">
-                            <div>
-                                <span class="vm-modal-tag">CIERRE DE RUTA</span>
-                                <h2 class="vm-modal-title" id="confirmDeliveryModalLabel-@order.Id">Confirmar entrega</h2>
-                                <p class="vm-modal-subtitle">Verifica que el cliente recibió el pedido @order.Code.</p>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                        </div>
-                        <form asp-action="ConfirmDelivery" asp-route-id="@order.Id" method="post">
-                            @Html.AntiForgeryToken()
-                            <div class="vm-modal-body">
-                                <div class="vm-delivery-summary-card">
-                                    <p><strong>Cliente:</strong> @order.CustomerName</p>
-                                    <p><strong>Dirección:</strong> @order.Address</p>
-                                    <p class="vm-delivery-summary-total"><strong>Total:</strong> S/ @order.Total.ToString("F2")</p>
-                                </div>
-                                <div class="vm-field-group mb-0">
-                                    <label for="deliveryNote-@order.Id" class="vm-modal-label">Nota de entrega (opcional)</label>
-                                    <textarea id="deliveryNote-@order.Id" name="deliveryNote" class="vm-modal-textarea" rows="3" placeholder="Entregado."></textarea>
-                                </div>
-                            </div>
-                            <div class="vm-modal-footer">
-                                <button type="button" class="vm-btn-cancel" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="vm-btn-save">Confirmar y finalizar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+<div class="vm-admin-wrapper vm-dr">
+    <div class="vm-dr-header">
+        <div class="vm-dr-title-wrap">
+            <span class="vm-dr-title-icon"><i class="bi bi-signpost-2"></i></span>
+            <div>
+                <h1 class="vm-dr-title">Despacho y rutas</h1>
+                <p class="vm-dr-subtitle">Gestiona pedidos listos, rutas activas y entregas.</p>
             </div>
-        }
-    </section>
+        </div>
+        <div class="vm-dr-counters">
+            <div class="vm-dr-counter"><small>Pendientes</small><strong id="drPending">@Model.Ready.Count</strong></div>
+            <div class="vm-dr-counter"><small>En ruta</small><strong class="is-route" id="drInRoute">@Model.InRoute.Count</strong></div>
+        </div>
+    </div>
 
-    <section id="historyOrders" class="mt-4">
-        <h2 class="vm-section-heading">Historial de entregas</h2>
-        @if (!Model.History.Any())
-        {
-            <div class="vm-empty-box">Aún no tienes entregas registradas en tu historial.</div>
-        }
-        @foreach (var order in Model.History)
-        {
-            <article class="vm-dispatch-card">
-                <div class="vm-dispatch-heading">
-                    <strong>@order.Code</strong>
-                    <span class="vm-route-badge vm-route-delivered"><i class="bi bi-check2-circle me-1"></i>Entregado</span>
-                    <strong>S/ @order.Total.ToString("F2")</strong>
-                </div>
-                <p class="vm-route-meta">@order.CustomerName — @order.Address — @order.ItemsCount productos</p>
-                <div class="d-flex flex-wrap gap-3 small text-muted mb-2">
-                    <span><i class="bi bi-clock me-1"></i>Entregado: @FormatPeruTime(order.DeliveredAt)</span>
-                    @if (order.DeliveryDurationMinutes.HasValue)
-                    {
-                        <span><i class="bi bi-stopwatch me-1"></i>Tiempo: @order.DeliveryDurationMinutes min</span>
-                    }
-                </div>
-                @if (!string.IsNullOrWhiteSpace(order.DeliveryNote))
+    <ul class="vm-dr-tabs" role="tablist">
+        <li role="presentation">
+            <button class="vm-dr-tab active" id="tab-active" data-bs-toggle="tab" data-bs-target="#pane-active" type="button" role="tab" aria-controls="pane-active" aria-selected="true">Despacho activo (@active.Count)</button>
+        </li>
+        <li role="presentation">
+            <button class="vm-dr-tab" id="tab-history" data-bs-toggle="tab" data-bs-target="#pane-history" type="button" role="tab" aria-controls="pane-history" aria-selected="false">Historial (@Model.History.Count)</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        @* ===================== Despacho activo (HU-12) ===================== *@
+        <div class="tab-pane fade show active" id="pane-active" role="tabpanel" aria-labelledby="tab-active">
+            @if (!active.Any())
+            {
+                <div class="vm-dr-empty">No hay pedidos listos para despacho.</div>
+            }
+            @foreach (var order in active)
+            {
+                var onTheWay = order.Status == OrderStatuses.OnTheWay;
+                <article class="vm-dr-card" data-order-card>
+                    <div class="vm-dr-card-head">
+                        <div class="vm-dr-card-main">
+                            <div class="vm-dr-card-line">
+                                <strong class="vm-dr-code">@order.Code</strong>
+                                <span class="vm-dr-badge @(onTheWay ? "is-route" : "")">@(onTheWay ? "En camino" : "Listo para despacho")</span>
+                            </div>
+                            <p class="vm-dr-card-sub">Pedido listo después de cocina · @FormatTime(order.ReadyAt)</p>
+                        </div>
+                        <div class="vm-dr-card-side">
+                            <strong class="vm-dr-total">@Money(order.Total)</strong>
+                            <button type="button" class="vm-dr-btn-detail" data-detail-toggle aria-expanded="false" aria-controls="detail-@order.Id">Ver detalle</button>
+                        </div>
+                    </div>
+
+                    <div class="vm-dr-detail" id="detail-@order.Id" hidden>
+                        <div class="vm-dr-summary">
+                            <span><i class="bi bi-person"></i> @order.CustomerName</span>
+                            <span><i class="bi bi-geo-alt"></i> @order.Address</span>
+                            <span><i class="bi bi-bag"></i> @order.ItemsCount productos</span>
+                        </div>
+
+                        <div class="vm-dr-grid">
+                            <div class="vm-dr-map">
+                                @if (order.HasLocation)
+                                {
+                                    <iframe title="Ubicación de entrega del pedido @order.Code" loading="lazy" referrerpolicy="no-referrer" src="@MapUrl(order)"></iframe>
+                                }
+                                else
+                                {
+                                    <p>No hay coordenadas registradas para mostrar la ubicación.</p>
+                                }
+                            </div>
+                            <div class="vm-dr-side-cards">
+                                <section class="vm-dr-box">
+                                    <h2 class="vm-dr-label">Cliente y destino</h2>
+                                    <p class="vm-dr-client"><i class="bi bi-person"></i> @order.CustomerName</p>
+                                    <div class="vm-dr-address">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <div><small>Dirección</small><span>@order.Address</span></div>
+                                    </div>
+                                    <p class="vm-dr-phone"><i class="bi bi-telephone"></i> Tel: @order.Phone@(string.IsNullOrWhiteSpace(order.AdditionalNote) ? "" : " · " + order.AdditionalNote)</p>
+                                </section>
+                                <section class="vm-dr-box vm-dr-collect">
+                                    <h2 class="vm-dr-label">Cobro contra entrega <i class="bi bi-wallet2"></i></h2>
+                                    <small>@order.PaymentMethod</small>
+                                    <strong>@Money(order.Total)</strong>
+                                </section>
+                            </div>
+                        </div>
+
+                        <section class="vm-dr-box vm-dr-products">
+                            <h2 class="vm-dr-label">Detalle de productos</h2>
+                            @foreach (var item in order.Items)
+                            {
+                                <div class="vm-dr-product-row">
+                                    <span>@item.Quantity× @item.Name</span>
+                                    <span>@Money(item.LineTotal)</span>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(order.AdditionalNote))
+                            {
+                                <p class="vm-dr-note"><strong>Nota:</strong> @order.AdditionalNote</p>
+                            }
+                        </section>
+
+                        @* Acciones de HU-14 / HU-15, conservadas dentro del detalle *@
+                        <div class="vm-dr-actions">
+                            @if (!onTheWay)
+                            {
+                                <form asp-action="Start" asp-route-id="@order.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button class="vm-btn-save" type="submit"><i class="bi bi-sign-turn-right me-1"></i> Aceptar e iniciar ruta</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button type="button" class="vm-btn-save" data-bs-toggle="modal" data-bs-target="#confirmDeliveryModal-@order.Id">
+                                    <i class="bi bi-check-circle me-1"></i> Confirmar entrega
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </article>
+
+                @if (onTheWay)
                 {
-                    <p class="small text-muted mb-2">
-                        <i class="bi bi-chat-left-text me-1"></i><strong>Nota de entrega:</strong> @order.DeliveryNote
-                    </p>
+                    <!-- Modal Cierre de Ruta (HU-15) -->
+                    <div class="modal fade" id="confirmDeliveryModal-@order.Id" tabindex="-1" aria-labelledby="confirmDeliveryModalLabel-@order.Id" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered vm-modal-dialog">
+                            <div class="modal-content vm-modal-card">
+                                <div class="vm-modal-header d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="vm-modal-tag">CIERRE DE RUTA</span>
+                                        <h2 class="vm-modal-title" id="confirmDeliveryModalLabel-@order.Id">Confirmar entrega</h2>
+                                        <p class="vm-modal-subtitle">Verifica que el cliente recibió el pedido @order.Code.</p>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <form asp-action="ConfirmDelivery" asp-route-id="@order.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <div class="vm-modal-body">
+                                        <div class="vm-delivery-summary-card">
+                                            <p><strong>Cliente:</strong> @order.CustomerName</p>
+                                            <p><strong>Dirección:</strong> @order.Address</p>
+                                            <p class="vm-delivery-summary-total"><strong>Total:</strong> @Money(order.Total)</p>
+                                        </div>
+                                        <div class="vm-field-group mb-0">
+                                            <label for="deliveryNote-@order.Id" class="vm-modal-label">Nota de entrega (opcional)</label>
+                                            <textarea id="deliveryNote-@order.Id" name="deliveryNote" class="vm-modal-textarea" rows="3" placeholder="Entregado."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="vm-modal-footer">
+                                        <button type="button" class="vm-btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="vm-btn-save">Confirmar y finalizar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 }
-                <details class="vm-route-details">
-                    <summary>Ver detalle del pedido entregado</summary>
-                    <p><strong>Cliente:</strong> @order.CustomerName</p>
-                    <p><strong>Teléfono:</strong> @order.Phone</p>
-                    <p><strong>Dirección:</strong> @order.Address</p>
-                    @foreach (var item in order.Items)
-                    {
-                        <p class="mb-1">@item.Quantity × @item.Name — S/ @item.UnitPrice.ToString("F2") c/u</p>
-                    }
-                    <p class="mt-2"><strong>Monto cobrado:</strong> S/ @order.Total.ToString("F2")</p>
-                </details>
-            </article>
-        }
-    </section>
+            }
+        </div>
+
+        @* ===================== Historial (HU-15) ===================== *@
+        <div class="tab-pane fade" id="pane-history" role="tabpanel" aria-labelledby="tab-history">
+            @if (!Model.History.Any())
+            {
+                <div class="vm-dr-empty">Aún no tienes entregas registradas en tu historial.</div>
+            }
+            @foreach (var order in Model.History)
+            {
+                <article class="vm-dr-card">
+                    <div class="vm-dr-card-head">
+                        <div class="vm-dr-card-main">
+                            <div class="vm-dr-card-line">
+                                <strong class="vm-dr-code">@order.Code</strong>
+                                <span class="vm-dr-badge is-done"><i class="bi bi-check2-circle me-1"></i>Entregado</span>
+                            </div>
+                            <p class="vm-dr-card-sub">@order.CustomerName — @order.Address — @order.ItemsCount productos</p>
+                            <p class="vm-dr-card-sub mb-0">
+                                <i class="bi bi-clock me-1"></i>Entregado: @FormatPeruTime(order.DeliveredAt)
+                                @if (order.DeliveryDurationMinutes.HasValue)
+                                {
+                                    <span class="ms-3"><i class="bi bi-stopwatch me-1"></i>Tiempo: @order.DeliveryDurationMinutes min</span>
+                                }
+                            </p>
+                            @if (!string.IsNullOrWhiteSpace(order.DeliveryNote))
+                            {
+                                <p class="vm-dr-card-sub mb-0 mt-1"><i class="bi bi-chat-left-text me-1"></i><strong>Nota de entrega:</strong> @order.DeliveryNote</p>
+                            }
+                        </div>
+                        <div class="vm-dr-card-side">
+                            <strong class="vm-dr-total">@Money(order.Total)</strong>
+                        </div>
+                    </div>
+                    <details class="vm-dr-history-details">
+                        <summary>Ver detalle del pedido entregado</summary>
+                        <p><strong>Cliente:</strong> @order.CustomerName</p>
+                        <p><strong>Teléfono:</strong> @order.Phone</p>
+                        <p><strong>Dirección:</strong> @order.Address</p>
+                        @foreach (var item in order.Items)
+                        {
+                            <p class="mb-1">@item.Quantity × @item.Name — @Money(item.LineTotal)</p>
+                        }
+                        <p class="mt-2 mb-0"><strong>Monto cobrado:</strong> @Money(order.Total)</p>
+                    </details>
+                </article>
+            }
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+<script>
+(() => {
+    // HU-12: "Ver detalle" / "Ocultar detalle". No modifica el estado del pedido.
+    document.querySelectorAll('[data-order-card]').forEach(card => {
+        const btn = card.querySelector('[data-detail-toggle]');
+        const panel = card.querySelector('.vm-dr-detail');
+        btn.addEventListener('click', () => {
+            const open = panel.hidden;
+            panel.hidden = !open;
+            btn.textContent = open ? 'Ocultar detalle' : 'Ver detalle';
+            btn.setAttribute('aria-expanded', String(open));
+            card.classList.toggle('is-open', open);
+        });
+    });
+})();
+</script>
+}

@@ -82,6 +82,9 @@ namespace software_elviejomadero.Models
         public ApplicationUser? DeliveryDriver { get; set; }
         public DateTime? RouteStartedAt { get; set; }
 
+        // HU-12: hora en que el pedido salió de cocina (Listo para despacho).
+        public DateTime? ReadyAt { get; set; }
+
         // HU-15: Confirmación de entrega
         public DateTime? DeliveredAt { get; set; }
 

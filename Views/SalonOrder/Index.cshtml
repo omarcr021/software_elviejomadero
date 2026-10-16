@@ -1,33 +1,74 @@
 @model software_elviejomadero.ViewModels.SalonTablesViewModel
-@using software_elviejomadero.Models
 @{
-    ViewData["Title"] = "Mesas del salón";
+    ViewData["Title"] = "Mozo";
 }
-<div class="vm-admin-wrapper">
-    <div class="vm-admin-header">
-        <div>
-            <h1 class="vm-page-title"><i class="bi bi-shop-window me-2"></i>Mesas del Salón</h1>
-            <p class="vm-page-subtitle">Selecciona una mesa libre para registrar un pedido y enviarlo a cocina.</p>
-        </div>
-        <a asp-action="Index" class="vm-btn-outline-action text-decoration-none"><i class="bi bi-arrow-clockwise me-1"></i> Actualizar estados</a>
+
+<link rel="stylesheet" href="~/css/mozo-salon.css" asp-append-version="true" />
+
+<div class="vm-admin-wrapper vm-mozo">
+    <div class="vm-mozo-header">
+        <h1 class="vm-mozo-title">Mozo</h1>
+        <p class="vm-mozo-subtitle">Entrega los platos listos, atiende las mesas y toma nuevos pedidos.</p>
     </div>
-    <div class="vm-tables-grid">
-        @foreach (var table in Model.Tables)
-        {
-            var free = table.Status == TableStatuses.Free;
-            <div class="vm-table-tile @(free ? "vm-table-free" : "vm-table-occupied")">
-                <i class="bi bi-people vm-table-icon"></i>
-                <h2 class="vm-table-number">@table.Number</h2>
-                <span class="vm-table-state @(free ? "text-success" : "text-danger")">@table.Status</span>
-                @if (free)
-                {
-                    <a asp-action="New" asp-route-tableId="@table.Id" class="vm-btn-save text-decoration-none mt-3">Registrar pedido</a>
-                }
-                else
-                {
-                    <button class="vm-btn-outline-action mt-3" type="button" disabled>Mesa ocupada</button>
-                }
-            </div>
-        }
+
+    @* "Listos para entregar" + "Mesas del salón": se refrescan solos (HU-02, criterio 4) *@
+    <div id="salonBoard" data-board-url="@Url.Action("Board", "SalonOrder")" data-detail-url="@Url.Action("TableDetail", "SalonOrder")">
+        <partial name="_Board" model="Model" />
     </div>
 </div>
+
+<!-- Detalle de mesa (HU-02, criterios 2 y 3) -->
+<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content vm-mozo-modal">
+            <div id="tableModalBody" class="vm-mozo-modal-body" aria-live="polite"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const board = document.getElementById('salonBoard');
+    const modalEl = document.getElementById('tableModal');
+    const modalBody = document.getElementById('tableModalBody');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    const POLL_MS = 4000;
+    let lastHtml = board.innerHTML.trim();
+    let busy = false;
+
+    // Tocar una mesa -> pide su detalle actualizado al servidor.
+    board.addEventListener('click', async e => {
+        const tile = e.target.closest('[data-table-id]');
+        if (!tile) return;
+        modalBody.innerHTML = '<p class="vm-mozo-loading">Cargando…</p>';
+        modal.show();
+        try {
+            const res = await fetch(`${board.dataset.detailUrl}?tableId=${encodeURIComponent(tile.dataset.tableId)}`,
+                { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+            if (!res.ok || res.redirected) throw new Error();
+            modalBody.innerHTML = await res.text();
+        } catch {
+            modalBody.innerHTML = '<p class="vm-mozo-loading text-danger">No se pudo cargar la mesa. Inténtalo de nuevo.</p>';
+        }
+    });
+
+    // Actualización automática: refleja lo que otros mozos ocupan o liberan, sin recargar la página.
+    async function refresh() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(board.dataset.boardUrl,
+                { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin', cache: 'no-store' });
+            if (res.ok && !res.redirected) {
+                const html = (await res.text()).trim();
+                if (html && html !== lastHtml) { board.innerHTML = html; lastHtml = html; }
+            }
+        } catch { /* sin red: se reintenta en el próximo ciclo */ }
+        finally { busy = false; }
+    }
+    setInterval(refresh, POLL_MS);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+})();
+</script>
+}

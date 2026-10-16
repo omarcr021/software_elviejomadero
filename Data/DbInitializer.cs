@@ -55,13 +55,15 @@ namespace software_elviejomadero.Data
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
             ");
 
-            // HU-03: sembrar mesas solo cuando el restaurante aún no tenga ninguna.
-            if (!await context.RestaurantTables.AnyAsync())
+            // HU-02/HU-03: el salón tiene 12 mesas (M1..M12). Solo se crean las que falten.
+            var existingTables = await context.RestaurantTables.Select(t => t.Number).ToListAsync();
+            var missingTables = Enumerable.Range(1, 12).Select(i => $"M{i}")
+                .Where(n => !existingTables.Contains(n))
+                .Select(n => new RestaurantTable { Number = n, Status = TableStatuses.Free, IsActive = true })
+                .ToList();
+            if (missingTables.Count > 0)
             {
-                context.RestaurantTables.AddRange(Enumerable.Range(1, 8).Select(i => new RestaurantTable
-                {
-                    Number = $"M{i}", Status = TableStatuses.Free, IsActive = true
-                }));
+                context.RestaurantTables.AddRange(missingTables);
                 await context.SaveChangesAsync();
             }
 

@@ -28,10 +28,14 @@ namespace software_elviejomadero.Services.Implementations
                 Total = o.TotalAmount, RouteStartedAt = o.RouteStartedAt,
                 DeliveredAt = o.DeliveredAt,
                 DeliveryNote = o.DeliveryNote,
+                ReadyAt = o.ReadyAt ?? o.CreatedAt,
+                PaymentMethod = o.PaymentMethod,
+                AdditionalNote = o.AdditionalNote,
+                Latitude = o.Latitude, Longitude = o.Longitude,
                 DeliveryDurationMinutes = (o.RouteStartedAt.HasValue && o.DeliveredAt.HasValue)
                     ? (int?)Math.Max(1, (int)Math.Round((o.DeliveredAt.Value - o.RouteStartedAt.Value).TotalMinutes))
                     : null,
-                Items = o.Items.Select(i => new DispatchItemViewModel
+                Items = o.Items.OrderBy(i => i.Id).Select(i => new DispatchItemViewModel
                 {
                     Name = i.DishName, Quantity = i.Quantity, UnitPrice = i.UnitPrice
                 }).ToList()
@@ -114,6 +118,7 @@ namespace software_elviejomadero.Services.Implementations
             if (order == null || order.OrderType != OrderTypes.Delivery || order.Status != OrderStatuses.New)
                 return (false, "Solo puedes marcar como listos los deliveries nuevos.");
             order.Status = OrderStatuses.ReadyForDispatch;
+            order.ReadyAt = DateTime.UtcNow;
             try
             {
                 await _context.SaveChangesAsync();

@@ -9,5 +9,10 @@ namespace software_elviejomadero.Services.Interfaces
         Task<RestaurantTable?> GetAvailableTableAsync(int tableId);
         Task<(bool Succeeded, string? ErrorMessage, Order? CreatedOrder)> CreateAsync(SalonNewOrderViewModel request, string waiterId);
         Task<SalonOrderConfirmationViewModel?> GetConfirmationAsync(int orderId);
+        // HU-02
+        Task<List<ReadyToServeViewModel>> GetReadyToServeAsync();
+        Task<TableConsumptionViewModel?> GetTableConsumptionAsync(int tableId);
+        Task<SalonNewOrderViewModel?> GetAddItemsContextAsync(int tableId);
+        Task<(bool Succeeded, string? ErrorMessage, Order? UpdatedOrder)> AddItemsAsync(SalonNewOrderViewModel request, string waiterId);
     }
 }

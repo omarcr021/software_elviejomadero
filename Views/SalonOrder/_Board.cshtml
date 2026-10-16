@@ -1,0 +1,52 @@
+@model software_elviejomadero.ViewModels.SalonTablesViewModel
+@using software_elviejomadero.Models
+@using software_elviejomadero.ViewModels
+
+<section class="vm-mozo-section" aria-labelledby="readyTitle">
+    <div class="vm-mozo-section-head">
+        <span class="vm-mozo-section-icon is-ready"><i class="bi bi-bell"></i></span>
+        <h2 class="vm-mozo-section-title" id="readyTitle">Listos para entregar</h2>
+        <span class="vm-mozo-count">@Model.ReadyToServe.Count</span>
+    </div>
+    @if (!Model.ReadyToServe.Any())
+    {
+        <div class="vm-mozo-empty">No hay platos listos en cocina por ahora.</div>
+    }
+    else
+    {
+        <div class="vm-mozo-ready-list">
+            @foreach (var ready in Model.ReadyToServe)
+            {
+                <div class="vm-mozo-ready-item">
+                    <strong>@ready.TableLabel</strong>
+                    <span>@ready.Code · @ready.CustomerName</span>
+                    <span class="vm-mozo-ready-qty">@ready.ItemsCount platos</span>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<section class="vm-mozo-section" aria-labelledby="tablesTitle">
+    <div class="vm-mozo-section-head">
+        <span class="vm-mozo-section-icon"><i class="bi bi-grid-3x3-gap"></i></span>
+        <h2 class="vm-mozo-section-title" id="tablesTitle">Mesas del salón</h2>
+        <button type="button" class="vm-mozo-btn-takeout" disabled title="Disponible en una próxima historia de usuario">
+            <i class="bi bi-bag"></i> Pedido para llevar
+        </button>
+    </div>
+    <p class="vm-mozo-hint">Toca una mesa libre para tomar un pedido, o una ocupada para ver su consumo.</p>
+
+    <div class="vm-mozo-grid">
+        @foreach (var table in Model.Tables)
+        {
+            var free = table.Status == TableStatuses.Free;
+            <button type="button" class="vm-mozo-table @(free ? "is-free" : "is-occupied")" data-table-id="@table.Id"
+                    aria-label="@TableLabels.Format(table.Number), @table.Status">
+                <i class="bi bi-people vm-mozo-table-icon"></i>
+                <span class="vm-mozo-table-name">@TableLabels.Format(table.Number)</span>
+                <span class="vm-mozo-state @(free ? "is-free" : "is-occupied")">@table.Status</span>
+            </button>
+        }
+    </div>
+</section>

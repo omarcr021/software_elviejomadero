@@ -354,6 +354,9 @@ namespace software_elviejomadero.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("ReadyAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ReceptionistId")
                         .IsRequired()
                         .HasColumnType("TEXT");

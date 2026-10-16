@@ -1,0 +1,72 @@
+/* HU-12 — Despacho y rutas (repartidor). Paleta: ver site.css (:root). */
+.vm-dr { --dr-line: #e8dfd3; --dr-soft: #fbf8f2; --dr-muted: #7b7068; }
+
+/* Encabezado */
+.vm-dr-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+.vm-dr-title-wrap { display:flex; align-items:center; gap:.75rem; }
+.vm-dr-title-icon { width:34px; height:34px; border-radius:8px; background:var(--madero-accent); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:1.05rem; }
+.vm-dr-title { font:700 1.15rem var(--font-serif); margin:0; color:var(--madero-dark); }
+.vm-dr-subtitle { margin:0; font-size:.72rem; color:var(--dr-muted); }
+.vm-dr-counters { display:flex; gap:.5rem; }
+.vm-dr-counter { background:var(--madero-card-bg); border:1px solid var(--dr-line); border-radius:8px; min-width:68px; padding:.3rem .75rem; text-align:center; }
+.vm-dr-counter small { display:block; font-size:.58rem; letter-spacing:.06em; text-transform:uppercase; color:var(--dr-muted); }
+.vm-dr-counter strong { display:block; font:700 1.1rem var(--font-serif); color:var(--madero-primary); line-height:1.2; }
+.vm-dr-counter strong.is-route { color:var(--madero-accent); }
+
+/* Pestañas */
+.vm-dr-tabs { list-style:none; display:inline-flex; gap:.25rem; margin:0 0 1rem; padding:.2rem; background:var(--madero-soft); border-radius:8px; }
+.vm-dr-tab { border:0; background:transparent; color:var(--dr-muted); font-size:.74rem; font-weight:600; padding:.3rem .8rem; border-radius:6px; }
+.vm-dr-tab.active { background:var(--madero-card-bg); color:var(--madero-dark); box-shadow:0 1px 3px #3c24111a; }
+
+/* Tarjeta de pedido */
+.vm-dr-card { background:var(--madero-card-bg); border:1px solid var(--dr-line); border-radius:8px; padding:.7rem .9rem; margin-bottom:.8rem; }
+.vm-dr-card-head { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+.vm-dr-card-line { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.vm-dr-code { font:700 .85rem var(--font-serif); color:var(--madero-dark); }
+.vm-dr-badge { font-size:.6rem; font-weight:600; background:var(--madero-soft); color:var(--madero-primary); border:1px solid var(--dr-line); border-radius:999px; padding:.05rem .5rem; }
+.vm-dr-badge.is-route { background:#e3f1e5; color:#246b3b; border-color:#cfe6d3; }
+.vm-dr-badge.is-done { background:#e2f2e5; color:#1f6b35; border-color:#cfe6d3; }
+.vm-dr-card-sub { margin:.2rem 0 0; font-size:.66rem; color:var(--dr-muted); overflow-wrap:anywhere; }
+.vm-dr-card-side { display:flex; align-items:center; gap:.7rem; }
+.vm-dr-total { font:700 .9rem var(--font-serif); color:var(--madero-dark); white-space:nowrap; }
+.vm-dr-btn-detail { background:var(--madero-card-bg); border:1px solid var(--dr-line); border-radius:6px; font-size:.66rem; font-weight:600; color:var(--madero-dark); padding:.2rem .6rem; white-space:nowrap; }
+.vm-dr-btn-detail:hover { background:var(--madero-soft); }
+
+/* Detalle expandido */
+.vm-dr-detail { margin-top:.7rem; }
+.vm-dr-summary { display:flex; flex-wrap:wrap; gap:1.2rem; border-top:1px solid var(--dr-line); border-bottom:1px solid var(--dr-line); padding:.55rem 0; margin-bottom:.8rem; font-size:.68rem; color:#5d534b; }
+.vm-dr-summary i { color:var(--madero-accent); margin-right:.25rem; }
+.vm-dr-grid { display:grid; grid-template-columns:1.25fr 1fr; gap:.8rem; margin-bottom:.8rem; }
+.vm-dr-map { background:#f1ece3; border:1px solid var(--dr-line); border-radius:8px; min-height:190px; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; }
+.vm-dr-map p { margin:0; padding:1rem; font-size:.66rem; color:var(--dr-muted); }
+.vm-dr-map iframe { width:100%; height:100%; min-height:220px; border:0; }
+.vm-dr-side-cards { display:flex; flex-direction:column; gap:.7rem; }
+.vm-dr-box { background:var(--madero-card-bg); border:1px solid var(--dr-line); border-radius:8px; padding:.7rem .85rem; }
+.vm-dr-label { font:600 .56rem var(--font-main); letter-spacing:.08em; text-transform:uppercase; color:var(--dr-muted); margin:0 0 .45rem; }
+.vm-dr-client { font:700 .85rem var(--font-serif); margin:0 0 .45rem; color:var(--madero-dark); }
+.vm-dr-client i, .vm-dr-phone i { color:var(--madero-accent); margin-right:.3rem; font-weight:400; }
+.vm-dr-address { display:flex; gap:.35rem; border-bottom:1px solid var(--dr-line); padding-bottom:.5rem; margin-bottom:.5rem; font-size:.66rem; }
+.vm-dr-address i { color:var(--madero-accent); }
+.vm-dr-address small { display:block; font-size:.5rem; text-transform:uppercase; letter-spacing:.06em; color:var(--dr-muted); }
+.vm-dr-phone { margin:0; font-size:.66rem; color:#5d534b; overflow-wrap:anywhere; }
+.vm-dr-collect { background:#f6ece2; border-color:#ead9c6; position:relative; }
+.vm-dr-collect .vm-dr-label i { position:absolute; right:.85rem; top:.65rem; font-size:.9rem; color:var(--madero-accent); }
+.vm-dr-collect small { display:block; font-size:.62rem; color:var(--dr-muted); }
+.vm-dr-collect strong { font:700 1.35rem var(--font-serif); color:var(--madero-dark); }
+.vm-dr-products { padding-bottom:.6rem; }
+.vm-dr-product-row { display:flex; justify-content:space-between; gap:1rem; font-size:.66rem; padding:.28rem 0; border-bottom:1px solid #f0e8dc; }
+.vm-dr-product-row:last-of-type { border-bottom:0; }
+.vm-dr-note { background:#f9ece4; border-radius:6px; font-size:.64rem; color:#5d534b; padding:.45rem .6rem; margin:.5rem 0 0; }
+.vm-dr-actions { display:flex; justify-content:flex-end; margin-top:.8rem; }
+
+/* Vacío e historial */
+.vm-dr-empty { background:var(--madero-card-bg); border:1px dashed var(--madero-border); border-radius:8px; color:var(--dr-muted); font-size:.8rem; text-align:center; padding:1.6rem 1rem; }
+.vm-dr-history-details { margin-top:.6rem; background:var(--dr-soft); border:1px solid var(--dr-line); border-radius:6px; padding:.5rem .7rem; font-size:.72rem; }
+.vm-dr-history-details summary { cursor:pointer; font-weight:600; }
+.vm-dr-history-details[open] summary { margin-bottom:.5rem; }
+.vm-dr-history-details p { margin-bottom:.25rem; }
+
+@media (max-width:700px) {
+    .vm-dr-grid { grid-template-columns:1fr; }
+    .vm-dr-card-side { width:100%; justify-content:space-between; }
+}

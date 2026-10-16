@@ -1,19 +1,20 @@
 @model software_elviejomadero.ViewModels.SalonNewOrderViewModel
 @{
-    ViewData["Title"] = "Pedido del salón";
+    ViewData["Title"] = Model.AddToExisting ? "Agregar platos" : "Pedido del salón";
+    var tableLabel = software_elviejomadero.ViewModels.TableLabels.Format(Model.TableNumber);
 }
 <div class="vm-admin-wrapper">
     <div class="mb-3"><a asp-action="Index" class="text-decoration-none text-madero"><i class="bi bi-arrow-left"></i> Volver a mesas</a></div>
     <div class="vm-admin-header">
-        <div><h1 class="vm-page-title">Mesa @Model.TableNumber <span class="vm-tag-salon">Salón</span></h1>
-            <p class="vm-page-subtitle">Revisa los platos del cliente antes de enviarlos a cocina.</p></div>
+        <div><h1 class="vm-page-title">@tableLabel <span class="vm-tag-salon">Salón</span></h1>
+            <p class="vm-page-subtitle">@(Model.AddToExisting ? $"Agrega más platos al pedido {Model.OrderCode} de {Model.CustomerName}." : "Revisa los platos del cliente antes de enviarlos a cocina.")</p></div>
     </div>
-    <form id="salonForm" asp-controller="SalonOrder" asp-action="Create" method="post" autocomplete="off">
+    <form id="salonForm" asp-controller="SalonOrder" asp-action="@(Model.AddToExisting ? "AddItems" : "Create")" method="post" autocomplete="off">
         @Html.AntiForgeryToken()
         <input type="hidden" name="TableId" value="@Model.TableId" />
         <div class="vm-field-group vm-salon-customer">
             <label class="vm-modal-label" for="salonCustomerName">Nombre del cliente</label>
-            <input id="salonCustomerName" class="vm-modal-input" name="CustomerName" required maxlength="120" placeholder="Ej: Juan" />
+            <input id="salonCustomerName" class="vm-modal-input" name="CustomerName" required maxlength="120" placeholder="Ej: Juan" value="@Model.CustomerName" readonly="@Model.AddToExisting" />
         </div>
         <div class="vm-step2-layout vm-salon-layout">
             <section class="vm-step2-catalog">
@@ -39,13 +40,13 @@
                 }
             </section>
             <aside class="vm-step2-cart vm-salon-cart">
-                <h2 class="vm-step2-cart-title">Pedido</h2>
+                <h2 class="vm-step2-cart-title">@(Model.AddToExisting ? "Platos nuevos" : "Pedido")</h2>
                 <div id="salonCart" class="vm-step2-cart-items"><p class="vm-cart-empty">Aún no hay platos en el pedido.</p></div>
                 <div class="vm-step2-cart-footer"><span>Total</span><strong id="salonTotal">S/ 0.00</strong></div>
                 <div id="salonHiddenItems"></div>
                 <p id="salonError" class="text-danger small mt-2" role="alert" hidden></p>
                 <button id="salonSubmit" class="vm-btn-save w-100 mt-3" type="submit" disabled>
-                    <i class="bi bi-send me-1"></i> Confirmar y enviar a cocina
+                    <i class="bi bi-send me-1"></i> @(Model.AddToExisting ? "Agregar y enviar a cocina" : "Confirmar y enviar a cocina")
                 </button>
             </aside>
         </div>

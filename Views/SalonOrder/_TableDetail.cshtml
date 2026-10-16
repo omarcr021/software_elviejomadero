@@ -1,0 +1,46 @@
+@model software_elviejomadero.ViewModels.TableConsumptionViewModel
+@using System.Globalization
+@{
+    string Money(decimal v) => "S/ " + v.ToString("F2", CultureInfo.InvariantCulture);
+}
+<div class="vm-mozo-modal-head">
+    <div>
+        <h2 class="vm-mozo-modal-title" id="tableModalTitle">@Model.TableLabel</h2>
+        <span class="vm-mozo-state @(Model.IsFree ? "is-free" : "is-occupied")">@Model.Status</span>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+@if (Model.IsFree)
+{
+    @* Criterio 2: mesa libre -> opción de tomar un nuevo pedido *@
+    <p class="vm-mozo-modal-text">Esta mesa está disponible. Toma el pedido del cliente y envíalo a cocina.</p>
+    <a asp-controller="SalonOrder" asp-action="New" asp-route-tableId="@Model.TableId" class="vm-btn-save vm-mozo-modal-action text-decoration-none">
+        <i class="bi bi-plus-circle me-1"></i> Tomar nuevo pedido
+    </a>
+}
+else
+{
+    @* Criterio 3: mesa ocupada -> detalle del consumo + agregar más platos *@
+    @if (Model.OrderCode == null)
+    {
+        <p class="vm-mozo-modal-text">La mesa figura como ocupada, pero no tiene un pedido activo.</p>
+    }
+    else
+    {
+        <p class="vm-mozo-modal-meta">@Model.OrderCode · @Model.CustomerName · <span>@Model.OrderStatus</span></p>
+        <div class="vm-mozo-consumption">
+            @foreach (var item in Model.Items)
+            {
+                <div class="vm-mozo-consumption-row">
+                    <span>@item.Quantity× @item.Name</span>
+                    <span>@Money(item.LineTotal)</span>
+                </div>
+            }
+            <div class="vm-mozo-consumption-total"><span>Total</span><strong>@Money(Model.Total)</strong></div>
+        </div>
+        <a asp-controller="SalonOrder" asp-action="AddItems" asp-route-tableId="@Model.TableId" class="vm-btn-save vm-mozo-modal-action text-decoration-none">
+            <i class="bi bi-plus-circle me-1"></i> Agregar más platos
+        </a>
+    }
+}
