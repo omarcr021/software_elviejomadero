@@ -65,3 +65,7 @@ public/storage
 *.7z
 *.tar
 *.gz
+
+*.db
+*.db-shm
+*.db-wal
