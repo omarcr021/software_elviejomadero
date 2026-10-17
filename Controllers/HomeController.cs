@@ -26,7 +26,7 @@ public class HomeController : Controller
         if (User.IsInRole("Repartidor"))
             return RedirectToAction("Index", "DeliveryRoute");
         if (User.IsInRole("Cocinero"))
-            return RedirectToAction("Index", "KitchenDispatch");
+            return RedirectToAction("Index", "Kitchen");
 
         return View();
     }

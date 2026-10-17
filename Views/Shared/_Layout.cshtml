@@ -62,7 +62,7 @@
                         }
                         @if (User.IsInRole("Cocinero") || User.IsInRole("Administrador"))
                         {
-                            <a class="vm-topbar-nav-link" asp-controller="KitchenDispatch" asp-action="Index">Cocina</a>
+                            <a class="vm-topbar-nav-link" asp-controller="Kitchen" asp-action="Index">Cocina</a>
                         }
                         @if (User.IsInRole("Repartidor") || User.IsInRole("Administrador"))
                         {

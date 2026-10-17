@@ -82,6 +82,11 @@ namespace software_elviejomadero.Data
                     .WithMany()
                     .HasForeignKey(o => o.ReceptionistId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(o => o.PreparedByUser)
+                    .WithMany()
+                    .HasForeignKey(o => o.PreparedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<OrderItem>(entity =>

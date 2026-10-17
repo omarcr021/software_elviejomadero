@@ -28,6 +28,10 @@ namespace software_elviejomadero.Controllers
                 {
                     return RedirectToAction("Index", "ReceptionOrder");
                 }
+                if (User.IsInRole("Cocinero"))
+                {
+                    return RedirectToAction("Index", "Kitchen");
+                }
                 return RedirectToAction("Index", "Home");
             }
 
@@ -64,7 +68,12 @@ namespace software_elviejomadero.Controllers
                     return RedirectToAction("Index", "ReceptionOrder");
                 }
 
-                // Otros roles operativos (Mozo, Cocinero, Repartidor)
+                if (result.Roles.Contains("Cocinero"))
+                {
+                    return RedirectToAction("Index", "Kitchen");
+                }
+
+                // Otros roles operativos (Mozo, Repartidor)
                 return RedirectToAction("Index", "Home");
             }
 

@@ -14,6 +14,7 @@ namespace software_elviejomadero.Models
     {
         public const string New = "Nuevo";
         public const string InKitchen = "En cocina";
+        public const string InPreparation = "En preparación";
         public const string ReadyForDispatch = "Listo para despacho";
         public const string OnTheWay = "En camino";
         public const string Delivered = "Entregado";
@@ -84,6 +85,11 @@ namespace software_elviejomadero.Models
 
         // HU-12: hora en que el pedido salió de cocina (Listo para despacho).
         public DateTime? ReadyAt { get; set; }
+
+        // HU-09: Cocina - comandas
+        public DateTime? PreparationStartedAt { get; set; }
+        public string? PreparedByUserId { get; set; }
+        public ApplicationUser? PreparedByUser { get; set; }
 
         // HU-15: Confirmación de entrega
         public DateTime? DeliveredAt { get; set; }

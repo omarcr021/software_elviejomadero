@@ -262,6 +262,13 @@ namespace software_elviejomadero.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("Categorías y platos de muestra sembrados correctamente.");
             }
+
+            // HU-09: cocinero y pedidos de prueba (solo en desarrollo)
+            var env = serviceProvider.GetService<IHostEnvironment>();
+            if (env != null && env.IsDevelopment())
+            {
+                await KitchenDemoSeeder.SeedAsync(context, userManager, logger);
+            }
         }
     }
 }

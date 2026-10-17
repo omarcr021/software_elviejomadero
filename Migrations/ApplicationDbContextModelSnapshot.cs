@@ -354,6 +354,12 @@ namespace software_elviejomadero.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PreparationStartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreparedByUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("ReadyAt")
                         .HasColumnType("TEXT");
 
@@ -386,6 +392,8 @@ namespace software_elviejomadero.Migrations
 
                     b.HasIndex("OrderCode")
                         .IsUnique();
+
+                    b.HasIndex("PreparedByUserId");
 
                     b.HasIndex("ReceptionistId");
 
@@ -528,6 +536,11 @@ namespace software_elviejomadero.Migrations
                         .HasForeignKey("DeliveryDriverId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("software_elviejomadero.Models.ApplicationUser", "PreparedByUser")
+                        .WithMany()
+                        .HasForeignKey("PreparedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("software_elviejomadero.Models.ApplicationUser", "Receptionist")
                         .WithMany()
                         .HasForeignKey("ReceptionistId")
@@ -540,6 +553,8 @@ namespace software_elviejomadero.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DeliveryDriver");
+
+                    b.Navigation("PreparedByUser");
 
                     b.Navigation("Receptionist");
 
