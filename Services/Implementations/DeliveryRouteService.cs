@@ -20,6 +20,17 @@ namespace software_elviejomadero.Services.Implementations
                      (o.Status == OrderStatuses.Delivered && o.DeliveryDriverId == driverId)))
                 .OrderByDescending(o => o.CreatedAt).ToListAsync();
 
+            static double? NormalizeCoord(double? val, double maxAbs)
+            {
+                if (!val.HasValue) return null;
+                var v = val.Value;
+                while (Math.Abs(v) > maxAbs && Math.Abs(v) > 0.0001)
+                {
+                    v /= 10.0;
+                }
+                return v;
+            }
+
             DispatchOrderViewModel ToCard(Order o) => new()
             {
                 Id = o.Id, Code = o.OrderCode, Status = o.Status,
@@ -31,7 +42,8 @@ namespace software_elviejomadero.Services.Implementations
                 ReadyAt = o.ReadyAt ?? o.CreatedAt,
                 PaymentMethod = o.PaymentMethod,
                 AdditionalNote = o.AdditionalNote,
-                Latitude = o.Latitude, Longitude = o.Longitude,
+                Latitude = NormalizeCoord(o.Latitude, 90.0),
+                Longitude = NormalizeCoord(o.Longitude, 180.0),
                 DeliveryDurationMinutes = (o.RouteStartedAt.HasValue && o.DeliveredAt.HasValue)
                     ? (int?)Math.Max(1, (int)Math.Round((o.DeliveredAt.Value - o.RouteStartedAt.Value).TotalMinutes))
                     : null,

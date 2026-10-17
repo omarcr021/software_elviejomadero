@@ -10,6 +10,7 @@
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
     private static string Money(decimal value) => "S/ " + value.ToString("F2", Inv);
+    private static string MoneyCompact(decimal value) => "S/" + value.ToString("F2", Inv);
 
     private static DateTime ToPeru(DateTime utcTime)
     {
@@ -23,17 +24,27 @@
         return utc.AddHours(-5);
     }
 
-    // 08:53 p. m.
     private static string FormatTime(DateTime? utcTime)
     {
         if (!utcTime.HasValue) return "—";
         var t = ToPeru(utcTime.Value);
         var hour = t.Hour % 12 == 0 ? 12 : t.Hour % 12;
-        return $"{hour:00}:{t.Minute:00} {(t.Hour < 12 ? "a. m." : "p. m.")}";
+        return $"{hour:02}:{t.Minute:02} {(t.Hour < 12 ? "a. m." : "p. m.")}";
     }
 
     private static string FormatPeruTime(DateTime? utcTime) =>
         utcTime.HasValue ? ToPeru(utcTime.Value).ToString("dd/MM/yyyy HH:mm", Inv) + " (Perú)" : "—";
+
+    private static string FormatOrderNote(string? phone, string? note)
+    {
+        var p = (phone ?? string.Empty).Trim();
+        var n = (note ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(p) && string.IsNullOrEmpty(n)) return string.Empty;
+        if (string.IsNullOrEmpty(p)) return n;
+        if (string.IsNullOrEmpty(n)) return $"Tel: {p}";
+        if (n.Contains(p)) return n;
+        return $"Tel: {p} · {n}";
+    }
 
     private static string MapUrl(DispatchOrderViewModel o)
     {
@@ -43,20 +54,35 @@
     }
 }
 
+<!-- Leaflet CSS para el mapa de entrega -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="stylesheet" href="~/css/despacho-rutas.css" asp-append-version="true" />
 
 <div class="vm-admin-wrapper vm-dr">
     <div class="vm-dr-header">
         <div class="vm-dr-title-wrap">
-            <span class="vm-dr-title-icon"><i class="bi bi-signpost-2"></i></span>
+            <span class="vm-dr-title-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18.5" cy="17.5" r="3.5"/>
+                    <circle cx="5.5" cy="17.5" r="3.5"/>
+                    <circle cx="15" cy="5" r="1"/>
+                    <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+                </svg>
+            </span>
             <div>
                 <h1 class="vm-dr-title">Despacho y rutas</h1>
                 <p class="vm-dr-subtitle">Gestiona pedidos listos, rutas activas y entregas.</p>
             </div>
         </div>
         <div class="vm-dr-counters">
-            <div class="vm-dr-counter"><small>Pendientes</small><strong id="drPending">@Model.Ready.Count</strong></div>
-            <div class="vm-dr-counter"><small>En ruta</small><strong class="is-route" id="drInRoute">@Model.InRoute.Count</strong></div>
+            <div class="vm-dr-counter">
+                <small>PENDIENTES</small>
+                <strong id="drPending">@Model.Ready.Count</strong>
+            </div>
+            <div class="vm-dr-counter">
+                <small>EN RUTA</small>
+                <strong class="is-route" id="drInRoute">@Model.InRoute.Count</strong>
+            </div>
         </div>
     </div>
 
@@ -89,7 +115,7 @@
                             <p class="vm-dr-card-sub">Pedido listo después de cocina · @FormatTime(order.ReadyAt)</p>
                         </div>
                         <div class="vm-dr-card-side">
-                            <strong class="vm-dr-total">@Money(order.Total)</strong>
+                            <strong class="vm-dr-total">@MoneyCompact(order.Total)</strong>
                             <button type="button" class="vm-dr-btn-detail" data-detail-toggle aria-expanded="false" aria-controls="detail-@order.Id">Ver detalle</button>
                         </div>
                     </div>
@@ -98,50 +124,70 @@
                         <div class="vm-dr-summary">
                             <span><i class="bi bi-person"></i> @order.CustomerName</span>
                             <span><i class="bi bi-geo-alt"></i> @order.Address</span>
-                            <span><i class="bi bi-bag"></i> @order.ItemsCount productos</span>
+                            <span><i class="bi bi-clock"></i> @order.ItemsCount productos</span>
                         </div>
 
                         <div class="vm-dr-grid">
                             <div class="vm-dr-map">
                                 @if (order.HasLocation)
                                 {
-                                    <iframe title="Ubicación de entrega del pedido @order.Code" loading="lazy" referrerpolicy="no-referrer" src="@MapUrl(order)"></iframe>
+                                    <div id="map-@order.Id" class="vm-dr-leaflet-map" 
+                                         data-lat="@order.Latitude!.Value.ToString(Inv)" 
+                                         data-lng="@order.Longitude!.Value.ToString(Inv)" 
+                                         data-code="@order.Code" 
+                                         data-address="@order.Address"></div>
+                                    <noscript>
+                                        <iframe title="Ubicación de entrega del pedido @order.Code" loading="lazy" referrerpolicy="no-referrer" src="@MapUrl(order)"></iframe>
+                                    </noscript>
                                 }
                                 else
                                 {
-                                    <p>No hay coordenadas registradas para mostrar la ubicación.</p>
+                                    <p class="vm-dr-map-empty">No hay coordenadas registradas para mostrar la ubicación.</p>
                                 }
                             </div>
                             <div class="vm-dr-side-cards">
                                 <section class="vm-dr-box">
-                                    <h2 class="vm-dr-label">Cliente y destino</h2>
+                                    <h2 class="vm-dr-box-title">CLIENTE Y DESTINO</h2>
                                     <p class="vm-dr-client"><i class="bi bi-person"></i> @order.CustomerName</p>
                                     <div class="vm-dr-address">
                                         <i class="bi bi-geo-alt"></i>
-                                        <div><small>Dirección</small><span>@order.Address</span></div>
+                                        <div>
+                                            <small>DIRECCIÓN</small>
+                                            <span>@order.Address</span>
+                                        </div>
                                     </div>
-                                    <p class="vm-dr-phone"><i class="bi bi-telephone"></i> Tel: @order.Phone@(string.IsNullOrWhiteSpace(order.AdditionalNote) ? "" : " · " + order.AdditionalNote)</p>
+                                    <p class="vm-dr-phone">
+                                        <i class="bi bi-telephone"></i>
+                                        <span>@FormatOrderNote(order.Phone, order.AdditionalNote)</span>
+                                    </p>
                                 </section>
                                 <section class="vm-dr-box vm-dr-collect">
-                                    <h2 class="vm-dr-label">Cobro contra entrega <i class="bi bi-wallet2"></i></h2>
-                                    <small>@order.PaymentMethod</small>
-                                    <strong>@Money(order.Total)</strong>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h2 class="vm-dr-box-title mb-0">COBRO CONTRA ENTREGA</h2>
+                                        <i class="bi bi-envelope vm-dr-payment-icon"></i>
+                                    </div>
+                                    <span class="vm-dr-payment-method">@order.PaymentMethod</span>
+                                    <strong class="vm-dr-collect-amount">@MoneyCompact(order.Total)</strong>
                                 </section>
                             </div>
                         </div>
 
-                        <section class="vm-dr-box vm-dr-products">
-                            <h2 class="vm-dr-label">Detalle de productos</h2>
-                            @foreach (var item in order.Items)
+                        <section class="vm-dr-products">
+                            <h2 class="vm-dr-box-title">DETALLE DE PRODUCTOS</h2>
+                            <div class="vm-dr-products-list">
+                                @foreach (var item in order.Items)
+                                {
+                                    <div class="vm-dr-product-row">
+                                        <span>@item.Quantity× @item.Name</span>
+                                        <strong>@Money(item.LineTotal)</strong>
+                                    </div>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(order.AdditionalNote) || !string.IsNullOrWhiteSpace(order.Phone))
                             {
-                                <div class="vm-dr-product-row">
-                                    <span>@item.Quantity× @item.Name</span>
-                                    <span>@Money(item.LineTotal)</span>
+                                <div class="vm-dr-note">
+                                    <strong>Nota:</strong> @FormatOrderNote(order.Phone, order.AdditionalNote)
                                 </div>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(order.AdditionalNote))
-                            {
-                                <p class="vm-dr-note"><strong>Nota:</strong> @order.AdditionalNote</p>
                             }
                         </section>
 
@@ -232,7 +278,7 @@
                             }
                         </div>
                         <div class="vm-dr-card-side">
-                            <strong class="vm-dr-total">@Money(order.Total)</strong>
+                            <strong class="vm-dr-total">@MoneyCompact(order.Total)</strong>
                         </div>
                     </div>
                     <details class="vm-dr-history-details">
@@ -253,18 +299,74 @@
 </div>
 
 @section Scripts {
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 (() => {
+    function initOrResizeMap(el) {
+        if (!el) return;
+        const rawLat = (el.dataset.lat || '').replace(',', '.');
+        const rawLng = (el.dataset.lng || '').replace(',', '.');
+        const lat = parseFloat(rawLat);
+        const lng = parseFloat(rawLng);
+        const code = el.dataset.code || '';
+        const address = el.dataset.address || '';
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        if (!el._mapInstance && window.L) {
+            const map = L.map(el, {
+                zoomControl: true,
+                attributionControl: true
+            }).setView([lat, lng], 16);
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>'
+            }).addTo(map);
+
+            // Pin personalizado con estilo Madero
+            const pinIcon = L.divIcon({
+                className: 'vm-pin-marker',
+                html: '<div style="background:#cf6b29;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #ffffff;box-shadow:0 3px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><i class=\"bi bi-geo-alt-fill\" style=\"transform:rotate(45deg);color:#ffffff;font-size:14px;\"></i></div>',
+                iconSize: [28, 28],
+                iconAnchor: [14, 28],
+                popupAnchor: [0, -28]
+            });
+
+            const marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map);
+            marker.bindPopup(`<strong>${code}</strong><br>${address}`).openPopup();
+            el._mapInstance = map;
+        }
+
+        if (el._mapInstance) {
+            const m = el._mapInstance;
+            [50, 150, 300, 600].forEach(delay => {
+                setTimeout(() => {
+                    m.invalidateSize();
+                    m.panTo([lat, lng], { animate: false });
+                }, delay);
+            });
+        }
+    }
+
     // HU-12: "Ver detalle" / "Ocultar detalle". No modifica el estado del pedido.
     document.querySelectorAll('[data-order-card]').forEach(card => {
         const btn = card.querySelector('[data-detail-toggle]');
         const panel = card.querySelector('.vm-dr-detail');
+        if (!btn || !panel) return;
         btn.addEventListener('click', () => {
             const open = panel.hidden;
             panel.hidden = !open;
             btn.textContent = open ? 'Ocultar detalle' : 'Ver detalle';
             btn.setAttribute('aria-expanded', String(open));
             card.classList.toggle('is-open', open);
+
+            if (open) {
+                const mapEl = card.querySelector('.vm-dr-leaflet-map');
+                if (mapEl) {
+                    setTimeout(() => initOrResizeMap(mapEl), 30);
+                }
+            }
         });
     });
 })();

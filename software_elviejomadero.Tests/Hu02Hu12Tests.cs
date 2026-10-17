@@ -42,6 +42,24 @@ namespace software_elviejomadero.Tests
             Assert.Equal(expected, TableLabels.Format(number));
 
         [Fact]
+        public async Task GetTablesAsync_ReturnsTablesInNaturalNumericOrder()
+        {
+            using var db = Context();
+            // Agregar mesas desordenadas M10, M3, M12
+            db.RestaurantTables.AddRange(
+                new RestaurantTable { Id = 10, Number = "M10" },
+                new RestaurantTable { Id = 3, Number = "M3" },
+                new RestaurantTable { Id = 12, Number = "M12" });
+            await db.SaveChangesAsync();
+
+            var service = new SalonOrderService(db, new OrderService(db));
+            var tables = await service.GetTablesAsync();
+
+            var numbers = tables.Select(t => t.Number).ToList();
+            Assert.Equal(new[] { "M1", "M2", "M3", "M10", "M12" }, numbers);
+        }
+
+        [Fact]
         public async Task Table_FreeShowsNoOrder_OccupiedShowsConsumption()
         {
             using var db = Context();

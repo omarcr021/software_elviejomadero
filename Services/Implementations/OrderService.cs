@@ -121,8 +121,12 @@ namespace software_elviejomadero.Services.Implementations
                 }
 
                 finalAddress = model.DeliveryAddress.Trim();
-                finalLat = model.Latitude.Value;
-                finalLng = model.Longitude.Value;
+                var lat = model.Latitude.Value;
+                var lng = model.Longitude.Value;
+                while (Math.Abs(lat) > 90.0 && Math.Abs(lat) > 0.0001) lat /= 10.0;
+                while (Math.Abs(lng) > 180.0 && Math.Abs(lng) > 0.0001) lng /= 10.0;
+                finalLat = lat;
+                finalLng = lng;
             }
             else
             {

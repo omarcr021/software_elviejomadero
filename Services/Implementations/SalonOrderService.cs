@@ -17,8 +17,22 @@ namespace software_elviejomadero.Services.Implementations
             _orders = orders;
         }
 
-        public Task<List<RestaurantTable>> GetTablesAsync() => _context.RestaurantTables
-            .AsNoTracking().Where(t => t.IsActive).OrderBy(t => t.Id).ToListAsync();
+        public async Task<List<RestaurantTable>> GetTablesAsync()
+        {
+            var tables = await _context.RestaurantTables
+                .AsNoTracking()
+                .Where(t => t.IsActive)
+                .ToListAsync();
+
+            return tables.OrderBy(t => ExtractTableNumber(t.Number)).ThenBy(t => t.Id).ToList();
+        }
+
+        private static int ExtractTableNumber(string? number)
+        {
+            if (string.IsNullOrWhiteSpace(number)) return int.MaxValue;
+            var digits = new string(number.Where(char.IsDigit).ToArray());
+            return int.TryParse(digits, out var val) ? val : int.MaxValue;
+        }
 
         public Task<RestaurantTable?> GetAvailableTableAsync(int tableId) => _context.RestaurantTables
             .AsNoTracking().FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive && t.Status == TableStatuses.Free);

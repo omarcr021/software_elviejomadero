@@ -29,10 +29,22 @@
 
 <section class="vm-mozo-section" aria-labelledby="tablesTitle">
     <div class="vm-mozo-section-head">
-        <span class="vm-mozo-section-icon"><i class="bi bi-grid-3x3-gap"></i></span>
+        <span class="vm-mozo-section-icon is-tables">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+                <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/>
+                <path d="M5 18v2"/>
+                <path d="M19 18v2"/>
+            </svg>
+        </span>
         <h2 class="vm-mozo-section-title" id="tablesTitle">Mesas del salón</h2>
         <button type="button" class="vm-mozo-btn-takeout" disabled title="Disponible en una próxima historia de usuario">
-            <i class="bi bi-bag"></i> Pedido para llevar
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            Pedido para llevar
         </button>
     </div>
     <p class="vm-mozo-hint">Toca una mesa libre para tomar un pedido, o una ocupada para ver su consumo.</p>
@@ -43,7 +55,12 @@
             var free = table.Status == TableStatuses.Free;
             <button type="button" class="vm-mozo-table @(free ? "is-free" : "is-occupied")" data-table-id="@table.Id"
                     aria-label="@TableLabels.Format(table.Number), @table.Status">
-                <i class="bi bi-people vm-mozo-table-icon"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" class="vm-mozo-table-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+                    <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/>
+                    <path d="M5 18v2"/>
+                    <path d="M19 18v2"/>
+                </svg>
                 <span class="vm-mozo-table-name">@TableLabels.Format(table.Number)</span>
                 <span class="vm-mozo-state @(free ? "is-free" : "is-occupied")">@table.Status</span>
             </button>

@@ -1,52 +1,309 @@
 /* HU-02 — Vista del mozo: "Listos para entregar" y "Mesas del salón". Paleta: ver site.css (:root). */
-.vm-mozo { --mz-line: #e8dfd3; --mz-muted: #7b7068; }
+.vm-mozo {
+    --mz-line: #eae2d7;
+    --mz-muted: #7b6f65;
+}
 
-.vm-mozo-header { margin-bottom: 1.25rem; }
-.vm-mozo-title { font: 700 1.75rem var(--font-serif); margin: 0 0 .15rem; color: var(--madero-dark); }
-.vm-mozo-subtitle { margin: 0; font-size: .85rem; color: var(--mz-muted); }
+.vm-mozo-header {
+    margin-bottom: 1.5rem;
+}
 
-.vm-mozo-section { margin-bottom: 1.6rem; }
-.vm-mozo-section-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .55rem; }
-.vm-mozo-section-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--madero-soft); color: var(--madero-primary); display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; }
-.vm-mozo-section-icon.is-ready { background: #dfeadf; color: #3b6b45; }
-.vm-mozo-section-title { font: 700 1.05rem var(--font-serif); margin: 0; color: var(--madero-dark); }
-.vm-mozo-count { font-size: .72rem; font-weight: 600; background: var(--madero-soft); color: var(--madero-primary); border-radius: 999px; padding: .05rem .5rem; }
-.vm-mozo-hint { font-size: .8rem; color: var(--mz-muted); margin: 0 0 .8rem; }
+.vm-mozo-title {
+    font-family: var(--font-serif);
+    font-size: 1.85rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: #24160e;
+}
 
-.vm-mozo-btn-takeout { margin-left: auto; display: inline-flex; align-items: center; gap: .4rem; background: var(--madero-card-bg); border: 1px solid var(--mz-line); border-radius: 8px; color: var(--madero-dark); font-size: .78rem; font-weight: 600; padding: .35rem .75rem; }
-.vm-mozo-btn-takeout:disabled { opacity: 1; cursor: not-allowed; }
+.vm-mozo-subtitle {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--mz-muted);
+}
 
-.vm-mozo-empty { background: var(--madero-card-bg); border: 1px dashed var(--mz-line); border-radius: 10px; color: var(--mz-muted); font-size: .82rem; text-align: center; padding: 1.5rem 1rem; }
-.vm-mozo-ready-list { display: flex; flex-direction: column; gap: .5rem; }
-.vm-mozo-ready-item { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; background: var(--madero-card-bg); border: 1px solid var(--mz-line); border-left: 3px solid #3b8a55; border-radius: 10px; padding: .6rem .9rem; font-size: .85rem; }
-.vm-mozo-ready-qty { margin-left: auto; color: var(--mz-muted); }
+.vm-mozo-section {
+    margin-bottom: 2rem;
+}
 
-/* Cuadrícula de mesas */
-.vm-mozo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
-.vm-mozo-table { background: var(--madero-card-bg); border: 1px solid var(--mz-line); border-radius: 10px; min-height: 104px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem; padding: .8rem .5rem; cursor: pointer; transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease; font-family: inherit; }
-.vm-mozo-table:hover { box-shadow: 0 4px 14px #3c241114; border-color: #d9c9b6; transform: translateY(-1px); }
-.vm-mozo-table:focus-visible { outline: 2px solid var(--madero-accent); outline-offset: 2px; }
-.vm-mozo-table.is-occupied { background: #fbf1e7; border-color: #ecc9a4; }
-.vm-mozo-table-icon { font-size: 1.15rem; color: var(--madero-primary); line-height: 1; }
-.vm-mozo-table-name { font: 700 .95rem var(--font-serif); color: var(--madero-dark); }
+.vm-mozo-section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.4rem;
+}
+
+.vm-mozo-section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vm-mozo-section-icon.is-ready {
+    background: #dfeade;
+    color: #3d6844;
+    font-size: 1rem;
+}
+
+.vm-mozo-section-icon.is-tables {
+    background: #503322;
+    color: #ffffff;
+}
+
+.vm-mozo-section-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin: 0;
+    color: #24160e;
+}
+
+.vm-mozo-count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #eaf1ea;
+    color: #3d6844;
+    border: 1px solid #d4e2d4;
+    border-radius: 999px;
+    padding: 0.05rem 0.55rem;
+}
+
+.vm-mozo-btn-takeout {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #ffffff;
+    border: 1px solid #ded5c9;
+    border-radius: 8px;
+    color: #432a19;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.38rem 0.85rem;
+    transition: background-color .15s ease;
+}
+
+.vm-mozo-btn-takeout:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.vm-mozo-empty {
+    background: #fbf9f5;
+    border: 1.5px dashed #ded6ca;
+    border-radius: 12px;
+    color: #887a6f;
+    font-size: 0.86rem;
+    text-align: center;
+    padding: 2.2rem 1rem;
+    margin-top: 0.65rem;
+}
+
+.vm-mozo-ready-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+}
+
+.vm-mozo-ready-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    background: #ffffff;
+    border: 1px solid var(--mz-line);
+    border-left: 3px solid #3b8a55;
+    border-radius: 10px;
+    padding: 0.65rem 0.95rem;
+    font-size: 0.85rem;
+}
+
+.vm-mozo-ready-qty {
+    margin-left: auto;
+    color: var(--mz-muted);
+}
+
+.vm-mozo-hint {
+    font-size: 0.84rem;
+    color: var(--mz-muted);
+    margin: 0 0 1.1rem;
+}
+
+/* Cuadrícula de mesas (4 columnas como en el prototipo) */
+.vm-mozo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.vm-mozo-table {
+    background: #ffffff;
+    border: 1px solid #e7dfd4;
+    border-radius: 14px;
+    min-height: 124px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 1.25rem 0.75rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    box-shadow: 0 1px 3px rgba(40, 22, 14, 0.03);
+    font-family: inherit;
+}
+
+.vm-mozo-table:hover {
+    box-shadow: 0 5px 15px rgba(50, 28, 16, 0.08);
+    border-color: #d1c1af;
+    transform: translateY(-2px);
+}
+
+.vm-mozo-table:focus-visible {
+    outline: 2px solid var(--madero-accent);
+    outline-offset: 2px;
+}
+
+.vm-mozo-table.is-occupied {
+    background: #fdf7f0;
+    border-color: #f1cfaf;
+}
+
+.vm-mozo-table-icon {
+    color: #8c7e73;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.vm-mozo-table.is-occupied .vm-mozo-table-icon {
+    color: #c46824;
+}
+
+.vm-mozo-table-name {
+    font-family: var(--font-serif);
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #24160e;
+    margin: 0;
+}
 
 /* Estado: color + etiqueta (HU-02, detalle 3) */
-.vm-mozo-state { display: inline-block; font-size: .68rem; font-weight: 600; border-radius: 999px; padding: .1rem .6rem; }
-.vm-mozo-state.is-free { background: #ece4d6; color: #6b5a45; }
-.vm-mozo-state.is-occupied { background: #f6d9bd; color: #9a4b0f; }
+.vm-mozo-state {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.18rem 0.85rem;
+    letter-spacing: 0.01em;
+}
+
+.vm-mozo-state.is-free {
+    background: #f4eee4;
+    color: #6e5d4d;
+}
+
+.vm-mozo-state.is-occupied {
+    background: #f6d9bd;
+    color: #9a4b0f;
+}
 
 /* Detalle de mesa (modal) */
-.vm-mozo-modal { border: 1px solid var(--mz-line); border-radius: 14px; background: var(--madero-card-bg); }
-.vm-mozo-modal-body { padding: 1.3rem 1.4rem 1.4rem; }
-.vm-mozo-modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .9rem; }
-.vm-mozo-modal-title { font: 700 1.3rem var(--font-serif); margin: 0 0 .35rem; }
-.vm-mozo-modal-text { font-size: .88rem; color: #5d534b; }
-.vm-mozo-modal-meta { font-size: .8rem; color: var(--mz-muted); margin-bottom: .6rem; }
-.vm-mozo-consumption { background: #fff; border: 1px solid var(--mz-line); border-radius: 10px; padding: .4rem .9rem; margin-bottom: 1rem; }
-.vm-mozo-consumption-row, .vm-mozo-consumption-total { display: flex; justify-content: space-between; gap: 1rem; font-size: .85rem; padding: .4rem 0; border-bottom: 1px solid #f0e8dc; }
-.vm-mozo-consumption-total { border-bottom: 0; font-weight: 700; color: var(--madero-primary); }
-.vm-mozo-modal-action { display: block; text-align: center; width: 100%; }
-.vm-mozo-loading { text-align: center; color: var(--mz-muted); margin: 1rem 0; }
+.vm-mozo-modal {
+    border: 1px solid var(--mz-line);
+    border-radius: 16px;
+    background: var(--madero-card-bg);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
 
-@media (max-width: 900px) { .vm-mozo-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 600px) { .vm-mozo-grid { grid-template-columns: repeat(2, 1fr); } }
+.vm-mozo-modal-body {
+    padding: 1.5rem 1.6rem 1.6rem;
+}
+
+.vm-mozo-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.vm-mozo-modal-title {
+    font: 700 1.35rem var(--font-serif);
+    margin: 0 0 0.35rem;
+    color: #24160e;
+}
+
+.vm-mozo-modal-text {
+    font-size: 0.9rem;
+    color: #5d534b;
+    margin-bottom: 1.25rem;
+}
+
+.vm-mozo-modal-meta {
+    font-size: 0.82rem;
+    color: var(--mz-muted);
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.vm-mozo-consumption {
+    background: #ffffff;
+    border: 1px solid var(--mz-line);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.vm-mozo-consumption-row,
+.vm-mozo-consumption-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.88rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f2ece3;
+}
+
+.vm-mozo-consumption-total {
+    border-bottom: 0;
+    font-weight: 700;
+    color: var(--madero-primary);
+    font-size: 0.92rem;
+}
+
+.vm-mozo-modal-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.vm-mozo-loading {
+    text-align: center;
+    color: var(--mz-muted);
+    margin: 1.5rem 0;
+}
+
+@media (max-width: 960px) {
+    .vm-mozo-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.85rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .vm-mozo-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+}
