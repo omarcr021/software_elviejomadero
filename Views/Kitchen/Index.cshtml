@@ -5,87 +5,295 @@
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap');
-
     :root {
-        --kc-ink: #2b1d14;
-        --kc-muted: #7a6c5a;
-        --kc-brown: #5a3a28;
-        --kc-brown-dark: #46291a;
-        --kc-orange: #d98530;
-        --kc-panel: #f1ece0;
-        --kc-panel-border: #ddd3bf;
-        --kc-card: #fffbf3;
-        --kc-card-border: #e8dfcd;
-        --kc-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
+        --kc-ink: #24160d;
+        --kc-muted: #7f705e;
+        --kc-brown: #4a2c1b;
+        --kc-brown-hover: #382012;
+        --kc-orange: #d46e20;
+        --kc-panel: #f5eee3;
+        --kc-panel-border: #e2d8c7;
+        --kc-card: #ffffff;
+        --kc-card-border: #e5ded2;
     }
 
     /* Encabezado */
-    .kc-page-title { font-family: var(--kc-serif); font-weight: 700; font-size: 1.6rem; color: var(--kc-ink); margin: 0 0 .25rem; }
-    .kc-page-sub { color: var(--kc-muted); font-size: .9rem; margin: 0 0 1.25rem; }
+    .kc-page-title {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-weight: 700;
+        font-size: 1.85rem;
+        color: var(--kc-ink);
+        margin: 0 0 .25rem;
+    }
 
-    /* Aviso de conexión: solo aparece si falla la actualización */
-    .kc-live { display: none; margin-bottom: .75rem; font-size: .85rem; color: #a3402f; }
+    .kc-page-sub {
+        color: var(--kc-muted);
+        font-size: .92rem;
+        margin: 0 0 1.35rem;
+    }
+
+    /* Aviso de conexión */
+    .kc-live {
+        display: none;
+        margin-bottom: .75rem;
+        font-size: .85rem;
+        color: #a3402f;
+    }
     .kc-live.is-offline { display: block; }
 
     /* Tablero */
-    .kc-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: stretch; }
-    @@media (max-width: 991.98px) { .kc-board { grid-template-columns: 1fr; } }
+    .kc-board {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+        align-items: stretch;
+    }
 
-    .kc-column { background: var(--kc-panel); border: 1px solid var(--kc-panel-border); border-radius: 16px; padding: 1rem; min-height: 22rem; }
+    @@media (max-width: 991.98px) {
+        .kc-board { grid-template-columns: 1fr; }
+    }
 
-    .kc-col-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .9rem; }
-    .kc-col-icon { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; flex-shrink: 0; }
-    .kc-icon-new   { background: var(--kc-orange); color: #fff; }
-    .kc-icon-prep  { background: var(--kc-brown);  color: #fff; }
-    .kc-icon-ready { background: #c6d1bb; color: #2f3b2a; }
-    .kc-col-title { font-family: var(--kc-serif); font-size: .95rem; font-weight: 700; color: var(--kc-ink); margin: 0; flex: 1; }
-    .kc-count { background: #e5ddcc; color: #5a4a3a; font-size: .75rem; font-weight: 600; padding: .1rem .55rem; border-radius: 999px; min-width: 1.6rem; text-align: center; }
+    .kc-column {
+        background: var(--kc-panel);
+        border: 1px solid var(--kc-panel-border);
+        border-radius: 16px;
+        padding: 1.15rem 1rem;
+        min-height: 24rem;
+    }
+
+    .kc-col-head {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .kc-col-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+        flex-shrink: 0;
+    }
+
+    .kc-icon-new   { background: #bd6a23; color: #fff; }
+    .kc-icon-prep  { background: #4a2c1b; color: #fff; }
+    .kc-icon-ready { background: #899c78; color: #fff; }
+
+    .kc-col-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--kc-ink);
+        margin: 0;
+        flex: 1;
+    }
+
+    .kc-count {
+        background: transparent;
+        border: 1px solid #cfc4b1;
+        color: #5c4d3d;
+        font-size: .82rem;
+        font-weight: 600;
+        padding: .15rem .65rem;
+        border-radius: 999px;
+        min-width: 1.85rem;
+        text-align: center;
+    }
 
     /* Columna vacía */
-    .kc-empty { border: 1.5px dashed #d3c8b2; border-radius: 12px; padding: 1.7rem 1rem; text-align: center; color: #8b7e6c; font-size: .9rem; }
+    .kc-empty {
+        border: 1.5px dashed #d5c8b5;
+        border-radius: 12px;
+        padding: 2.8rem 1rem;
+        text-align: center;
+        color: #8e7e6b;
+        font-size: .92rem;
+        background: transparent;
+        font-weight: 500;
+    }
 
     /* Tarjeta de pedido */
-    .kc-card { background: var(--kc-card); border: 1px solid var(--kc-card-border); border-radius: 12px; padding: .9rem 1rem; margin-bottom: .75rem; box-shadow: 0 1px 2px rgba(60, 40, 20, .06); }
+    .kc-card {
+        background: var(--kc-card);
+        border: 1px solid var(--kc-card-border);
+        border-radius: 13px;
+        padding: 1.05rem 1.15rem;
+        margin-bottom: .85rem;
+        box-shadow: 0 2px 7px rgba(50, 30, 10, .04);
+    }
     .kc-card:last-child { margin-bottom: 0; }
-    .kc-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .55rem; }
-    .kc-code { font-family: var(--kc-serif); font-weight: 700; font-size: 1.1rem; color: var(--kc-ink); }
-    .kc-time { font-size: .78rem; color: var(--kc-muted); white-space: nowrap; display: inline-flex; align-items: center; gap: .3rem; }
 
-    .kc-origin { display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .78rem; color: var(--kc-muted); padding-bottom: .6rem; border-bottom: 1px solid #e6dccb; }
-    .kc-origin-label { display: inline-flex; align-items: center; gap: .35rem; }
-    .kc-customer { color: var(--kc-ink); text-align: right; }
+    .kc-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: .45rem;
+    }
 
-    .kc-items { list-style: none; margin: .6rem 0 .5rem; padding: 0; }
-    .kc-items li { padding: .15rem 0; font-size: .85rem; color: var(--kc-ink); }
-    .kc-qty { color: var(--kc-orange); font-weight: 700; font-size: .8rem; margin-right: .2rem; }
+    .kc-code {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--kc-ink);
+    }
 
-    .kc-note { background: #f1e9db; color: #6b5a48; font-size: .75rem; padding: .4rem .6rem; border-radius: 6px; margin-bottom: .6rem; }
+    .kc-time {
+        font-size: .8rem;
+        color: var(--kc-muted);
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .kc-origin {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .5rem;
+        font-size: .84rem;
+        color: var(--kc-muted);
+        padding-bottom: .65rem;
+        margin-bottom: .75rem;
+        border-bottom: 1px solid #ede5d7;
+    }
+
+    .kc-origin-label {
+        display: inline-flex;
+        align-items: center;
+        font-weight: 500;
+    }
+
+    .kc-customer {
+        color: var(--kc-ink);
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .kc-items {
+        list-style: none;
+        margin: .6rem 0 .75rem;
+        padding: 0;
+    }
+
+    .kc-items li {
+        padding: .2rem 0;
+        font-size: .88rem;
+        color: var(--kc-ink);
+        display: flex;
+        align-items: baseline;
+        line-height: 1.35;
+    }
+
+    .kc-qty {
+        color: var(--kc-orange);
+        font-weight: 700;
+        font-size: .88rem;
+        margin-right: .4rem;
+        flex-shrink: 0;
+    }
+
+    .kc-note {
+        background: #f4eee4;
+        color: #6e5c4a;
+        font-size: .8rem;
+        padding: .45rem .75rem;
+        border-radius: 7px;
+        margin-bottom: .75rem;
+        font-weight: 500;
+        line-height: 1.4;
+    }
 
     /* Botones */
-    .kc-btn { display: flex; align-items: center; justify-content: center; gap: .45rem; width: 100%; border: 0; border-radius: 8px; padding: .55rem 1rem; color: #fff; font-size: .85rem; font-weight: 600; cursor: pointer; transition: background .15s ease; }
+    .kc-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: .65rem 1rem;
+        color: #ffffff;
+        font-size: .88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s ease;
+    }
     .kc-btn:disabled { opacity: .6; cursor: default; }
-    .kc-btn:focus-visible { outline: 3px solid rgba(217, 133, 48, .5); outline-offset: 2px; }
-    .kc-btn-start { background: var(--kc-brown); }
-    .kc-btn-start:hover:not(:disabled) { background: var(--kc-brown-dark); }
-    .kc-btn-ready { background: #3f6b4a; }
-    .kc-btn-ready:hover:not(:disabled) { background: #335a3d; }
+    .kc-btn:focus-visible { outline: 3px solid rgba(212, 110, 32, .5); outline-offset: 2px; }
+
+    .kc-btn-start {
+        background: var(--kc-brown);
+    }
+    .kc-btn-start:hover:not(:disabled) {
+        background: var(--kc-brown-hover);
+    }
+
+    .kc-btn-ready {
+        background: var(--kc-brown);
+    }
+    .kc-btn-ready:hover:not(:disabled) {
+        background: var(--kc-brown-hover);
+    }
 
     /* Pedido listo */
-    .kc-ready-info { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem; margin-top: .2rem; }
-    .kc-ready-badge { background: #e3ecdb; color: #2f5a36; font-size: .75rem; font-weight: 600; padding: .2rem .65rem; border-radius: 999px; }
-    .kc-responsible { font-size: .75rem; color: var(--kc-muted); }
+    .kc-ready-info {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: .4rem;
+        padding-top: .2rem;
+    }
+
+    .kc-ready-badge {
+        background: #e4eee0;
+        color: #2e5934;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .25rem .7rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .kc-responsible {
+        font-size: .78rem;
+        color: var(--kc-muted);
+    }
     .kc-responsible strong { color: var(--kc-ink); }
 
-    /* Avisos */
-    .kc-toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 1080; display: flex; flex-direction: column; gap: .5rem; }
-    .kc-toast { padding: .65rem 1rem; border-radius: 8px; color: #fff; font-size: .85rem; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); max-width: 22rem; }
+    /* Avisos Flotantes */
+    .kc-toasts {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 1080;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .kc-toast {
+        padding: .75rem 1.15rem;
+        border-radius: 8px;
+        color: #fff;
+        font-size: .86rem;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+        max-width: 24rem;
+    }
     .kc-toast-success { background: #3f6b4a; }
-    .kc-toast-danger { background: #a3402f; }
+    .kc-toast-danger  { background: #a3402f; }
 </style>
 
-<h1 class="kc-page-title">Cocina — comandas</h1>
-<p class="kc-page-sub">Los pedidos entran automáticamente. Muévelos según avance la preparación.</p>
+<div class="mb-4">
+    <h1 class="kc-page-title">Cocina — comandas</h1>
+    <p class="kc-page-sub">Los pedidos entran automáticamente. Muévelos según avance la preparación.</p>
+</div>
 
 <div id="kcLive" class="kc-live"><i class="bi bi-wifi-off me-1"></i><span id="kcLiveText"></span></div>
 
@@ -113,10 +321,9 @@
             };
 
             const POLL_MS = 8000;
-            let serverOffset = 0;   // servidor - navegador, en ms
+            let serverOffset = 0;
             let busy = false;
 
-            // Misma lógica que KitchenOrderViewModel.FormatElapsed
             function formatElapsed(ms) {
                 const total = Math.max(0, Math.floor(ms / 60000));
                 if (total < 1) return 'recién';
@@ -150,7 +357,6 @@
             }
 
             function sessionExpired(response) {
-                // Si la sesión caducó, el servidor redirige al login
                 if (response.redirected || response.status === 401 || response.status === 403) {
                     window.location.reload();
                     return true;

@@ -25,6 +25,7 @@ namespace software_elviejomadero.ViewModels
         public OrderType Type { get; set; }
         public int? TableNumber { get; set; }
         public string? CustomerName { get; set; }
+        public string? CustomerPhone { get; set; }
         public string? Note { get; set; }
         public OrderStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }

@@ -59,6 +59,7 @@ namespace software_elviejomadero.Services.Implementations
                     Type = orderType,
                     TableNumber = tableNum,
                     CustomerName = o.CustomerName,
+                    CustomerPhone = o.CustomerPhone,
                     Note = o.AdditionalNote,
                     Status = orderStatus,
                     CreatedAt = o.CreatedAt,

@@ -12,7 +12,18 @@
 
     <div class="kc-origin">
         <span class="kc-origin-label">
-            <i class="bi @(Model.Type == OrderType.Mesa ? "bi-inbox" : Model.Type == OrderType.ParaLlevar ? "bi-bag" : "bi-bicycle")"></i>
+            @if (Model.Type == OrderType.Mesa)
+            {
+                <i class="bi bi-inbox me-1"></i>
+            }
+            else if (Model.Type == OrderType.ParaLlevar)
+            {
+                <i class="bi bi-bag me-1"></i>
+            }
+            else
+            {
+                <i class="bi bi-bicycle me-1"></i>
+            }
             @Model.OriginLabel
         </span>
         <span class="kc-customer">@Model.CustomerName</span>
@@ -25,26 +36,40 @@
         }
     </ul>
 
-    @if (!string.IsNullOrWhiteSpace(Model.Note))
+    @if (!string.IsNullOrWhiteSpace(Model.CustomerPhone) || !string.IsNullOrWhiteSpace(Model.Note))
     {
-        <div class="kc-note">@Model.Note</div>
+        <div class="kc-note">
+            @if (!string.IsNullOrWhiteSpace(Model.CustomerPhone) && !string.IsNullOrWhiteSpace(Model.Note))
+            {
+                <span>Tel: @Model.CustomerPhone - @Model.Note</span>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.CustomerPhone) && Model.Type == OrderType.Delivery)
+            {
+                <span>Tel: @Model.CustomerPhone</span>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Note))
+            {
+                <span>@Model.Note</span>
+            }
+        </div>
     }
 
     @switch (Model.Status)
     {
         case OrderStatus.Nuevo:
             <button type="button" class="kc-btn kc-btn-start" data-action="start" data-id="@Model.Id">
-                <i class="bi bi-fire"></i> Empezar preparación
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi me-1" viewBox="0 0 16 16"><path d="M5 1a2.5 2.5 0 0 0-2.5 2.5c0 .35.07.69.2 1A2.5 2.5 0 0 0 1 7a2.5 2.5 0 0 0 2.2 2.48A2 2 0 0 0 5 11h6a2 2 0 0 0 1.8-1.52A2.5 2.5 0 0 0 15 7a2.5 2.5 0 0 0-1.7-2.5c.13-.31.2-.65.2-1A2.5 2.5 0 0 0 11 1c-.96 0-1.8.54-2.22 1.33A2.5 2.5 0 0 0 5 1zM4 12v1.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V12H4z"/></svg>
+                Empezar preparación
             </button>
             break;
         case OrderStatus.EnPreparacion:
             <button type="button" class="kc-btn kc-btn-ready" data-action="ready" data-id="@Model.Id">
-                <i class="bi bi-check2-circle"></i> Marcar como listo
+                <i class="bi bi-check2-circle me-1"></i> Marcar como listo
             </button>
             break;
         case OrderStatus.Listo:
             <div class="kc-ready-info">
-                <span class="kc-ready-badge"><i class="bi bi-check-circle-fill"></i> @Model.ReadyStatusLabel</span>
+                <span class="kc-ready-badge"><i class="bi bi-check-circle-fill me-1"></i>@Model.ReadyStatusLabel</span>
                 <span class="kc-responsible">Entrega: <strong>@Model.DeliveryResponsible</strong></span>
             </div>
             break;

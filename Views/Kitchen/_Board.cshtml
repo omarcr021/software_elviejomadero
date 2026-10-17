@@ -14,7 +14,16 @@
     {
         <section class="kc-column" aria-label="@col.Title">
             <header class="kc-col-head">
-                <span class="kc-col-icon @col.Css"><i class="bi @col.Icon"></i></span>
+                <span class="kc-col-icon @col.Css">
+                    @if (col.Css == "kc-icon-prep")
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi" viewBox="0 0 16 16"><path d="M5 1a2.5 2.5 0 0 0-2.5 2.5c0 .35.07.69.2 1A2.5 2.5 0 0 0 1 7a2.5 2.5 0 0 0 2.2 2.48A2 2 0 0 0 5 11h6a2 2 0 0 0 1.8-1.52A2.5 2.5 0 0 0 15 7a2.5 2.5 0 0 0-1.7-2.5c.13-.31.2-.65.2-1A2.5 2.5 0 0 0 11 1c-.96 0-1.8.54-2.22 1.33A2.5 2.5 0 0 0 5 1zM4 12v1.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V12H4z"/></svg>
+                    }
+                    else
+                    {
+                        <i class="bi @col.Icon"></i>
+                    }
+                </span>
                 <h2 class="kc-col-title">@col.Title</h2>
                 <span class="kc-count" aria-label="@col.Orders.Count pedidos">@col.Orders.Count</span>
             </header>
