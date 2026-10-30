@@ -85,7 +85,7 @@
 </style>
 
 <h1 class="kc-page-title">Cocina — comandas</h1>
-<p class="kc-page-sub">Los pedidos entran automáticamente. Muévelos según avance la preparación.</p>
+<p class="kc-page-sub">Los pedidos entran automáticamente y se ordenan por tiempo de espera: el que lleva más tiempo aparece primero.</p>
 
 <div id="kcLive" class="kc-live"><i class="bi bi-wifi-off me-1"></i><span id="kcLiveText"></span></div>
 
@@ -129,11 +129,35 @@
                 if (root) serverOffset = Number(root.dataset.serverNow) - Date.now();
             }
 
+            function createdMsOf(card) {
+                const el = card.querySelector('[data-created-ms]');
+                return el ? Number(el.dataset.createdMs) : 0;
+            }
+
+            // HU-10: "Nuevos" y "En preparación" se mantienen ordenados por tiempo de espera
+            // (mayor espera = enviado antes = primero). Si la espera es igual, desempata la hora
+            // de envío y, en último caso, el Id. Solo mueve tarjetas si el orden cambió.
+            function sortColumns() {
+                board.querySelectorAll('.kc-column[data-sortable="true"]').forEach(function (col) {
+                    const cards = Array.from(col.querySelectorAll(':scope > .kc-card'));
+                    if (cards.length < 2) return;
+
+                    const sorted = cards.slice().sort(function (a, b) {
+                        const diff = createdMsOf(a) - createdMsOf(b);
+                        return diff !== 0 ? diff : Number(a.dataset.orderId) - Number(b.dataset.orderId);
+                    });
+
+                    const changed = sorted.some(function (card, i) { return card !== cards[i]; });
+                    if (changed) sorted.forEach(function (card) { col.appendChild(card); });
+                });
+            }
+
             function tick() {
                 const now = Date.now() + serverOffset;
                 board.querySelectorAll('[data-created-ms]').forEach(function (el) {
                     el.textContent = formatElapsed(now - Number(el.dataset.createdMs));
                 });
+                sortColumns();
             }
 
             function setLive(ok) {

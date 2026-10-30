@@ -15,6 +15,8 @@ namespace software_elviejomadero.Data
         public DbSet<Dish> Dishes => Set<Dish>();
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+        public DbSet<KitchenNotice> KitchenNotices => Set<KitchenNotice>();          // HU-13
+        public DbSet<KitchenNoticeRead> KitchenNoticeReads => Set<KitchenNoticeRead>(); // HU-13
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -74,6 +76,33 @@ namespace software_elviejomadero.Data
                     .WithMany()
                     .HasForeignKey(i => i.DishId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Avisos de cocina para el repartidor (HU-13)
+            builder.Entity<KitchenNotice>(entity =>
+            {
+                entity.HasKey(n => n.Id);
+                entity.Property(n => n.Message).IsRequired().HasMaxLength(300);
+
+                // Un solo aviso por pedido (evita duplicados si se pulsa dos veces)
+                entity.HasIndex(n => n.OrderId).IsUnique();
+                entity.HasIndex(n => n.CreatedAt);
+
+                entity.HasOne(n => n.Order)
+                    .WithMany()
+                    .HasForeignKey(n => n.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<KitchenNoticeRead>(entity =>
+            {
+                entity.HasKey(r => new { r.NoticeId, r.UserId });
+                entity.Property(r => r.UserId).IsRequired().HasMaxLength(450);
+
+                entity.HasOne(r => r.Notice)
+                    .WithMany(n => n.Reads)
+                    .HasForeignKey(r => r.NoticeId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

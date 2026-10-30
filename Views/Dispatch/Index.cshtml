@@ -1,0 +1,71 @@
+@using software_elviejomadero.Models
+@model List<Order>
+
+@{
+    ViewData["Title"] = "Despacho y rutas";
+    var historyCount = (int)(ViewBag.HistoryCount ?? 0);
+}
+
+<div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-3 text-white"
+             style="width:52px;height:52px;background:#d47628;font-size:1.5rem;">
+            <i class="bi bi-bicycle"></i>
+        </div>
+        <div>
+            <h1 class="h3 fw-bold mb-0" style="font-family:Georgia,'Times New Roman',serif;color:#231710;">Despacho y rutas</h1>
+            <p class="text-muted mb-0">Gestiona pedidos listos, rutas activas y entregas.</p>
+        </div>
+    </div>
+
+    @* HU-13: campana con contador de avisos no leídos *@
+    <partial name="_NoticeBell" />
+</div>
+
+<ul class="nav nav-pills mb-3 p-1 bg-white border rounded-3 d-inline-flex" id="dispatchTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="active-tab" data-bs-toggle="pill" data-bs-target="#activePane" type="button" role="tab">
+            Despacho activo (@Model.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#historyPane" type="button" role="tab">
+            Historial (@historyCount)
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="activePane" role="tabpanel">
+        @if (!Model.Any())
+        {
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center text-muted">
+                <i class="bi bi-box-seam display-6 d-block mb-2"></i>
+                No hay pedidos listos para reparto.
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var order in Model)
+                {
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm rounded-4 p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>@order.Code</strong>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Listo para reparto</span>
+                            </div>
+                            <div class="text-muted small mt-1">@(string.IsNullOrWhiteSpace(order.CustomerName) ? "Sin nombre de cliente" : order.CustomerName)</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="tab-pane fade" id="historyPane" role="tabpanel">
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center text-muted">
+            El detalle del historial se habilitará con la historia de entrega.
+        </div>
+    </div>
+</div>

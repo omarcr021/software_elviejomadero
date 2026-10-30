@@ -10,6 +10,29 @@ namespace software_elviejomadero.ViewModels
 
         /// <summary>Hora del servidor (ms Unix) para que el contador del navegador no dependa del reloj del cliente.</summary>
         public long ServerNowUnixMs { get; set; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        /// <summary>
+        /// HU-10: ordena "Nuevos" y "En preparación" por prioridad.
+        /// 1) Mayor tiempo de espera primero (minutos transcurridos desde que se envió a cocina).
+        /// 2) Si el tiempo de espera es igual, el que se envió antes (hora de envío exacta).
+        /// 3) Si aún empatan, el menor Id (orden de registro).
+        /// "Listos" no se reordena.
+        /// </summary>
+        public void ApplyPriorityOrder()
+        {
+            var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            NewOrders = Prioritize(NewOrders, nowMs);
+            InPreparationOrders = Prioritize(InPreparationOrders, nowMs);
+        }
+
+        public static List<KitchenOrderViewModel> Prioritize(IEnumerable<KitchenOrderViewModel> orders, long nowMs)
+        {
+            return orders
+                .OrderByDescending(o => o.WaitMinutes(nowMs))
+                .ThenBy(o => o.CreatedAt)
+                .ThenBy(o => o.Id)
+                .ToList();
+        }
     }
 
     public class KitchenOrderItemViewModel
@@ -32,6 +55,9 @@ namespace software_elviejomadero.ViewModels
 
         public long CreatedAtUnixMs =>
             new DateTimeOffset(DateTime.SpecifyKind(CreatedAt, DateTimeKind.Utc)).ToUnixTimeMilliseconds();
+
+        /// <summary>Minutos completos de espera desde que se envió a cocina (HU-10).</summary>
+        public int WaitMinutes(long nowMs) => (int)Math.Max(0, (nowMs - CreatedAtUnixMs) / 60000);
 
         /// <summary>"Mesa 4", "Para llevar" o "Delivery".</summary>
         public string OriginLabel => Type switch

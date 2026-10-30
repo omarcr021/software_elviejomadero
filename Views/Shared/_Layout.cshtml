@@ -1,3 +1,11 @@
+@{
+    var isAuthenticated = User.Identity != null && User.Identity.IsAuthenticated;
+    var roleLabel = User.IsInRole("Administrador") ? "Administrador" :
+                    User.IsInRole("Mozo") ? "Mozo" :
+                    User.IsInRole("Cocinero") ? "Cocinero" :
+                    User.IsInRole("Recepcionista") ? "Recepcionista" :
+                    User.IsInRole("Repartidor") ? "Repartidor" : "Colaborador";
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,21 +31,15 @@
                     <span class="vm-logo-badge">VM</span>
                     <div class="vm-brand-info">
                         <span class="vm-brand-title">El Viejo Madero</span>
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        @if (isAuthenticated)
                         {
-                            <span class="vm-brand-role">
-                                @(User.IsInRole("Administrador") ? "Administrador" :
-                                  User.IsInRole("Mozo") ? "Mozo" :
-                                  User.IsInRole("Cocinero") ? "Cocinero" :
-                                  User.IsInRole("Recepcionista") ? "Recepcionista" :
-                                  User.IsInRole("Repartidor") ? "Repartidor" : "Colaborador") &middot;
-                            </span>
+                            <span class="vm-brand-role">@roleLabel &middot; @(User.Identity?.Name)</span>
                         }
                     </div>
                 </a>
 
                 <div class="d-flex align-items-center">
-                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    @if (isAuthenticated)
                     {
                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
                             @Html.AntiForgeryToken()
@@ -63,6 +65,12 @@
             @RenderBody()
         </div>
     </main>
+
+    @* HU-13: ventana "Avisos de cocina" + actualización en tiempo real (solo repartidor) *@
+    @if (isAuthenticated && User.IsInRole("Repartidor"))
+    {
+        <partial name="_DeliveryNotices" />
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
