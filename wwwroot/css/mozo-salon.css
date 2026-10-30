@@ -307,3 +307,27 @@
         gap: 0.75rem;
     }
 }
+
+/* HU-05: tiempo de atención y consumo en mesas ocupadas */
+.vm-hu05-metrics {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    line-height: 1.25;
+    margin-top: 0.15rem;
+}
+.vm-hu05-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: #746251;
+    font-variant-numeric: tabular-nums;
+}
+.vm-hu05-total {
+    font-size: 0.86rem;
+    color: #462b1b;
+    font-variant-numeric: tabular-nums;
+}
+.vm-hu05-pending { font-size: 0.72rem; color: #746251; }

@@ -21,7 +21,8 @@ namespace software_elviejomadero.Controllers
         private async Task<SalonTablesViewModel> BuildBoardAsync() => new()
         {
             Tables = await _salon.GetTablesAsync(),
-            ReadyToServe = await _salon.GetReadyToServeAsync()
+            ReadyToServe = await _salon.GetReadyToServeAsync(),
+            Attention = await _salon.GetTableAttentionAsync()
         };
 
         [HttpGet]

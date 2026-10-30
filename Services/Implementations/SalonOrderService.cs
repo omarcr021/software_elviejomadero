@@ -34,6 +34,38 @@ namespace software_elviejomadero.Services.Implementations
             return int.TryParse(digits, out var val) ? val : int.MaxValue;
         }
 
+        // HU-05: recopilar solo los pedidos activos del salón para las mesas ocupadas.
+        public async Task<List<SalonTableAttentionViewModel>> GetTableAttentionAsync()
+        {
+            var occupiedIds = await _context.RestaurantTables.AsNoTracking()
+                .Where(t => t.IsActive && t.Status == TableStatuses.Occupied)
+                .Select(t => t.Id).ToArrayAsync();
+            if (occupiedIds.Length == 0) return new List<SalonTableAttentionViewModel>();
+
+            var orders = await _context.Orders.AsNoTracking()
+                .Where(o => o.OrderType == OrderTypes.DineIn
+                    && o.TableId.HasValue && occupiedIds.Contains(o.TableId.Value)
+                    && o.Status != OrderStatuses.Delivered)
+                .OrderByDescending(o => o.CreatedAt).ThenByDescending(o => o.Id)
+                .Select(o => new
+                {
+                    o.TableId, o.CreatedAt, o.TotalAmount, o.EstimatedServiceMinutes
+                }).ToListAsync();
+
+            // Seleccionamos el pedido activo más reciente de cada mesa, sin consultas por mesa.
+            return orders.GroupBy(o => o.TableId!.Value).Select(g =>
+            {
+                var order = g.First();
+                return new SalonTableAttentionViewModel
+                {
+                    TableId = g.Key,
+                    TotalConsumption = order.TotalAmount,
+                    EstimatedServiceMinutes = order.EstimatedServiceMinutes,
+                    SentToKitchenAtUtc = DateTime.SpecifyKind(order.CreatedAt, DateTimeKind.Utc)
+                };
+            }).ToList();
+        }
+
         public Task<RestaurantTable?> GetAvailableTableAsync(int tableId) => _context.RestaurantTables
             .AsNoTracking().FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive && t.Status == TableStatuses.Free);
 
@@ -79,6 +111,10 @@ namespace software_elviejomadero.Services.Implementations
                         UnitPrice = dish.Price, Subtotal = dish.Price * i.Quantity
                     };
                 }).ToList();
+                // HU-05: guardar la estimación al confirmar y enviar a cocina.
+                var estimatedMinutes = SalonAttentionEstimator.CalculateMinutes(
+                    quantities.Select(q => (dishes[q.DishId].PreparationTimeMinutes, (int)q.Quantity)));
+                var sentToKitchenAtUtc = DateTime.UtcNow;
                 var order = new Order
                 {
                     OrderCode = await _orders.GenerateUniqueOrderCodeAsync(OrderTypes.DineIn),
@@ -90,7 +126,8 @@ namespace software_elviejomadero.Services.Implementations
                     PaymentMethod = "Pendiente",
                     TotalAmount = items.Sum(i => i.Subtotal),
                     TotalItemsCount = items.Sum(i => i.Quantity),
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = sentToKitchenAtUtc,
+                    EstimatedServiceMinutes = estimatedMinutes,
                     ReceptionistId = waiterId,
                     Items = items
                 };
@@ -117,7 +154,8 @@ namespace software_elviejomadero.Services.Implementations
             {
                 OrderCode = order.OrderCode,
                 TableNumber = order.Table?.Number ?? "",
-                CustomerName = order.CustomerName
+                CustomerName = order.CustomerName,
+                EstimatedServiceMinutes = order.EstimatedServiceMinutes
             };
         }
 
@@ -162,6 +200,8 @@ namespace software_elviejomadero.Services.Implementations
                 result.CustomerName = order.CustomerName;
                 result.OrderStatus = order.Status;
                 result.Total = order.TotalAmount;
+                result.EstimatedServiceMinutes = order.EstimatedServiceMinutes;
+                result.SentToKitchenAtUtc = DateTime.SpecifyKind(order.CreatedAt, DateTimeKind.Utc);
                 result.Items = order.Items.OrderBy(i => i.Id).Select(i => new DispatchItemViewModel
                 {
                     Name = i.DishName, Quantity = i.Quantity, UnitPrice = i.UnitPrice
@@ -235,6 +275,27 @@ namespace software_elviejomadero.Services.Implementations
                 }
                 order.TotalAmount = order.Items.Sum(i => i.Subtotal);
                 order.TotalItemsCount = order.Items.Sum(i => i.Quantity);
+
+                // HU-05: si se agregan platos a una mesa ocupada se actualiza la
+                // estimación del pedido, pero NO se reinicia la hora del envío inicial.
+                // Se suman los tiempos originales almacenados y los nuevos platos;
+                // si el pedido es antiguo, se estima con el catálogo actual.
+                var additionalMinutes = SalonAttentionEstimator.CalculateMinutes(
+                    quantities.Select(q => (dishes[q.DishId].PreparationTimeMinutes, (int)q.Quantity)));
+                if (order.EstimatedServiceMinutes.HasValue)
+                {
+                    order.EstimatedServiceMinutes = (int)Math.Min(int.MaxValue,
+                        (long)order.EstimatedServiceMinutes.Value + additionalMinutes);
+                }
+                else
+                {
+                    var allDishIds = order.Items.Select(i => i.DishId).Distinct().ToArray();
+                    var allTimes = await _context.Dishes.AsNoTracking()
+                        .Where(d => allDishIds.Contains(d.Id))
+                        .ToDictionaryAsync(d => d.Id, d => d.PreparationTimeMinutes);
+                    order.EstimatedServiceMinutes = SalonAttentionEstimator.CalculateMinutes(
+                        order.Items.Select(i => (allTimes.GetValueOrDefault(i.DishId), i.Quantity)));
+                }
                 // Los platos nuevos deben pasar otra vez por cocina.
                 order.Status = OrderStatuses.InKitchen;
                 await _context.SaveChangesAsync();

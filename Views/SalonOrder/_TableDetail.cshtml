@@ -29,6 +29,12 @@ else
     else
     {
         <p class="vm-mozo-modal-meta">@Model.OrderCode · @Model.CustomerName · <span>@Model.OrderStatus</span></p>
+        @if (Model.EstimatedServiceMinutes.HasValue && Model.SentToKitchenAtUtc.HasValue)
+        {
+            <p class="vm-mozo-modal-text"><i class="bi bi-clock" aria-hidden="true"></i>
+                Tiempo estimado: <strong>@Model.EstimatedServiceMinutes min</strong>
+            </p>
+        }
         <div class="vm-mozo-consumption">
             @foreach (var item in Model.Items)
             {

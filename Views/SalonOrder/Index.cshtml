@@ -37,6 +37,23 @@
     let lastHtml = board.innerHTML.trim();
     let busy = false;
 
+    // HU-05: no se actualiza el tiempo en el servidor cada segundo.
+    // Se calcula en el navegador desde la hora UTC en que el pedido se envió a cocina.
+    function updateElapsedMinutes() {
+        const now = Date.now();
+        board.querySelectorAll('[data-hu05-start]').forEach(tile => {
+            const startedAt = Date.parse(tile.dataset.hu05Start);
+            const estimate = Number(tile.dataset.hu05Estimate);
+            const label = tile.querySelector('[data-hu05-minutes]');
+            if (!Number.isFinite(startedAt) || !Number.isFinite(estimate) || !label) return;
+            const elapsed = Math.max(0, Math.floor((now - startedAt) / 60000));
+            const next = `${elapsed}/${estimate} min`;
+            if (label.textContent !== next) label.textContent = next;
+        });
+    }
+    updateElapsedMinutes();
+    setInterval(updateElapsedMinutes, 15000);
+
     // Tocar una mesa -> pide su detalle actualizado al servidor.
     board.addEventListener('click', async e => {
         const tile = e.target.closest('[data-table-id]');
@@ -62,7 +79,11 @@
                 { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin', cache: 'no-store' });
             if (res.ok && !res.redirected) {
                 const html = (await res.text()).trim();
-                if (html && html !== lastHtml) { board.innerHTML = html; lastHtml = html; }
+                if (html && html !== lastHtml) {
+                    board.innerHTML = html;
+                    lastHtml = html;
+                    updateElapsedMinutes();
+                }
             }
         } catch { /* sin red: se reintenta en el próximo ciclo */ }
         finally { busy = false; }

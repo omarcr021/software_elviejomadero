@@ -74,6 +74,10 @@ namespace software_elviejomadero.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // HU-05: tiempo calculado al enviar el pedido del salón a cocina.
+        // Nullable para respetar los pedidos anteriores a esta historia.
+        public int? EstimatedServiceMinutes { get; set; }
+
         // HU-03: el salón comparte la entidad de pedidos existente.
         public int? TableId { get; set; }
         public RestaurantTable? Table { get; set; }
