@@ -9,10 +9,17 @@ namespace software_elviejomadero.Services
     public class KitchenService : IKitchenService
     {
         private readonly ApplicationDbContext _context;
+        private readonly INoticeService _noticeService;
+        private readonly ILogger<KitchenService> _logger;
 
-        public KitchenService(ApplicationDbContext context)
+        public KitchenService(
+            ApplicationDbContext context,
+            INoticeService noticeService,
+            ILogger<KitchenService> logger)
         {
             _context = context;
+            _noticeService = noticeService;
+            _logger = logger;
         }
 
         public async Task<KitchenBoardViewModel> GetBoardAsync()
@@ -66,6 +73,17 @@ namespace software_elviejomadero.Services
 
             if (rows == 1)
             {
+                // HU-13: si es un pedido de delivery, se avisa al repartidor.
+                // Un fallo al generar el aviso no debe impedir que cocina avance el pedido.
+                try
+                {
+                    await _noticeService.NotifyDeliveryInPreparationAsync(orderId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "No se pudo generar el aviso de delivery del pedido {OrderId}.", orderId);
+                }
+
                 return KitchenActionResult.Ok("El pedido pasó a \"En preparación\".");
             }
 

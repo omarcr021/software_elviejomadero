@@ -35,6 +35,29 @@ namespace software_elviejomadero.Data
                 }
             }
 
+            // HU-13: usuario repartidor de prueba (recibe los avisos de cocina)
+            if (await userManager.FindByNameAsync("repartidor") == null)
+            {
+                var courier = new ApplicationUser
+                {
+                    UserName = "repartidor",
+                    Email = "repartidor@elviejomadero.com",
+                    FullName = "Repartidor de Prueba",
+                    DNI = "00000002",
+                    Phone = "999999997",
+                    IsActive = true,
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var created = await userManager.CreateAsync(courier, "Repartidor123*!");
+                if (created.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(courier, "Repartidor");
+                    logger.LogInformation("Usuario repartidor de prueba creado (repartidor / Repartidor123*!).");
+                }
+            }
+
             if (await context.Orders.AnyAsync()) return;
 
             var dishes = await context.Dishes.ToDictionaryAsync(d => d.Name);

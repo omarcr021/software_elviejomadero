@@ -296,6 +296,50 @@ namespace software_elviejomadero.Migrations
                     b.ToTable("Dishes");
                 });
 
+            modelBuilder.Entity("software_elviejomadero.Models.KitchenNotice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("KitchenNotices");
+                });
+
+            modelBuilder.Entity("software_elviejomadero.Models.KitchenNoticeRead", b =>
+                {
+                    b.Property<int>("NoticeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("NoticeId", "UserId");
+
+                    b.ToTable("KitchenNoticeReads");
+                });
+
             modelBuilder.Entity("software_elviejomadero.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -444,6 +488,28 @@ namespace software_elviejomadero.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("software_elviejomadero.Models.KitchenNotice", b =>
+                {
+                    b.HasOne("software_elviejomadero.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("software_elviejomadero.Models.KitchenNoticeRead", b =>
+                {
+                    b.HasOne("software_elviejomadero.Models.KitchenNotice", "Notice")
+                        .WithMany("Reads")
+                        .HasForeignKey("NoticeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notice");
+                });
+
             modelBuilder.Entity("software_elviejomadero.Models.OrderItem", b =>
                 {
                     b.HasOne("software_elviejomadero.Models.Dish", "Dish")
@@ -466,6 +532,11 @@ namespace software_elviejomadero.Migrations
             modelBuilder.Entity("software_elviejomadero.Models.Category", b =>
                 {
                     b.Navigation("Dishes");
+                });
+
+            modelBuilder.Entity("software_elviejomadero.Models.KitchenNotice", b =>
+                {
+                    b.Navigation("Reads");
                 });
 
             modelBuilder.Entity("software_elviejomadero.Models.Order", b =>

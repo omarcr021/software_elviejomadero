@@ -1,0 +1,176 @@
+@* HU-13: ventana "Avisos de cocina" para el repartidor. Se incluye desde _Layout. *@
+
+<style>
+    .vm-bell { position: relative; width: 46px; height: 46px; display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e0d7ce; border-radius: 12px; color: #231710; font-size: 1.2rem; line-height: 1; cursor: pointer; box-shadow: 0 1px 2px rgba(35, 23, 16, .06); }
+    .vm-bell:hover { background: #fbf8f3; }
+    .vm-bell:focus-visible { outline: 3px solid rgba(217, 133, 48, .5); outline-offset: 2px; }
+    .vm-bell-badge { position: absolute; top: -7px; right: -7px; min-width: 1.2rem; height: 1.2rem; padding: 0 .3rem; border-radius: 999px; background: #b42318; color: #fff; font-size: .68rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fbf8f3; }
+    .vm-bell-badge[hidden] { display: none; }
+
+    .vm-notice-tag { font-size: .8rem; color: #786d65; }
+    .vm-notice-list { list-style: none; margin: 0; padding: 0; }
+    .vm-notice-item { display: flex; gap: .75rem; align-items: flex-start; padding: .85rem 1rem; border-left: 4px solid transparent; border-bottom: 1px solid #eee3d0; }
+    .vm-notice-item:last-child { border-bottom: 0; }
+    .vm-notice-item.is-unread { background: #fff6e8; border-left-color: #d47628; }
+    .vm-notice-icon { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #fde9d5; color: #d47628; display: inline-flex; align-items: center; justify-content: center; }
+    .vm-notice-title { margin: 0; font-size: .95rem; font-weight: 600; color: #231710; }
+    .vm-notice-msg { margin: .1rem 0 .2rem; font-size: .88rem; color: #786d65; }
+    .vm-notice-time { font-size: .75rem; color: #9a8d7f; }
+    .vm-notice-empty { padding: 2rem 1rem; text-align: center; color: #8b7e6c; font-size: .9rem; }
+</style>
+
+<form id="vmNoticeAntiforgery" method="post">@Html.AntiForgeryToken()</form>
+
+<div class="modal fade" id="vmNoticeModal" tabindex="-1" aria-labelledby="vmNoticeTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="vmNoticeTitle">Avisos de cocina</h2>
+                <span class="vm-notice-tag ms-auto me-3">Solo delivery</span>
+                <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <ul id="vmNoticeList" class="vm-notice-list"></ul>
+                <div id="vmNoticeEmpty" class="vm-notice-empty">No hay avisos por ahora.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const bell = document.getElementById('vmNoticeBell');
+        if (!bell) return;   // la campana solo existe en "Despacho y rutas"
+
+        const badge = document.getElementById('vmNoticeBadge');
+        const modalEl = document.getElementById('vmNoticeModal');
+        const bodyEl = modalEl.querySelector('.modal-body');
+        const listEl = document.getElementById('vmNoticeList');
+        const emptyEl = document.getElementById('vmNoticeEmpty');
+        const token = document.querySelector('#vmNoticeAntiforgery input[name="__RequestVerificationToken"]').value;
+
+        const urls = {
+            summary: '@Url.Action("Summary", "Notice")',
+            read: '@Url.Action("MarkAsRead", "Notice")'
+        };
+
+        const POLL_MS = 5000;   // "tiempo real" sin recargar la página
+        let unread = 0;
+        let maxSeenId = 0;      // el aviso más reciente que ya se dibujó
+        let serverOffset = 0;
+
+        function formatElapsed(ms) {
+            const total = Math.max(0, Math.floor(ms / 60000));
+            if (total < 1) return 'recién';
+            if (total < 60) return 'hace ' + total + ' min';
+            return 'hace ' + Math.floor(total / 60) + ' h ' + String(total % 60).padStart(2, '0') + ' min';
+        }
+
+        // "Pedido #F61 en preparación. Cocina comenzó a..." -> título + detalle
+        function splitMessage(text) {
+            const i = text.indexOf('. ');
+            if (i === -1) return { title: text, detail: '' };
+            let detail = text.slice(i + 2).trim();
+            if (detail && !detail.endsWith('.')) detail += '.';
+            return { title: text.slice(0, i), detail: detail };
+        }
+
+        function reloadIfSessionExpired(response) {
+            if (response.redirected || response.status === 401 || response.status === 403) {
+                window.location.reload();
+                return true;
+            }
+            return false;
+        }
+
+        function render(data) {
+            unread = data.unreadCount;
+            serverOffset = data.serverNowUnixMs - Date.now();
+
+            // Criterio 1: contador sobre la campana
+            badge.textContent = unread > 99 ? '99+' : String(unread);
+            badge.hidden = unread === 0;
+            bell.setAttribute('aria-label', unread > 0
+                ? 'Avisos de cocina, ' + unread + ' sin leer'
+                : 'Avisos de cocina');
+
+            maxSeenId = data.notices.reduce(function (m, n) { return Math.max(m, n.id); }, 0);
+
+            const scrollTop = bodyEl.scrollTop;
+            listEl.replaceChildren();
+            emptyEl.hidden = data.notices.length > 0;
+
+            const now = Date.now() + serverOffset;
+            data.notices.forEach(function (n) {
+                const parts = splitMessage(n.message);
+
+                const li = document.createElement('li');
+                li.className = 'vm-notice-item' + (n.isRead ? '' : ' is-unread');
+
+                const icon = document.createElement('span');
+                icon.className = 'vm-notice-icon';
+                icon.innerHTML = '<i class="bi bi-fire"></i>';   // HTML fijo, sin datos del usuario
+
+                const content = document.createElement('div');
+
+                // textContent: el nombre del cliente nunca se interpreta como HTML
+                const title = document.createElement('p');
+                title.className = 'vm-notice-title';
+                title.textContent = parts.title;
+                content.appendChild(title);
+
+                if (parts.detail) {
+                    const msg = document.createElement('p');
+                    msg.className = 'vm-notice-msg';
+                    msg.textContent = parts.detail;
+                    content.appendChild(msg);
+                }
+
+                const time = document.createElement('span');
+                time.className = 'vm-notice-time';
+                time.textContent = formatElapsed(now - n.createdAtUnixMs);
+                content.appendChild(time);
+
+                li.appendChild(icon);
+                li.appendChild(content);
+                listEl.appendChild(li);
+            });
+            bodyEl.scrollTop = scrollTop;
+        }
+
+        async function load() {
+            try {
+                const response = await fetch(urls.summary, { cache: 'no-store', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (reloadIfSessionExpired(response)) return;
+                if (!response.ok) return;
+                render(await response.json());
+            } catch (err) { /* sin conexión: se reintenta en el siguiente ciclo */ }
+        }
+
+        // Criterio 3: al cerrar la ventana, los avisos mostrados pasan a leídos y se quita el contador.
+        modalEl.addEventListener('hidden.bs.modal', async function () {
+            if (unread === 0 || maxSeenId === 0) return;
+            try {
+                const response = await fetch(urls.read, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({ upToId: String(maxSeenId) })
+                });
+                if (reloadIfSessionExpired(response)) return;
+            } catch (err) { /* se reintenta al cerrar de nuevo */ }
+            load();
+        });
+
+        // Criterio 2: al abrir, se refresca para mostrar lo último
+        modalEl.addEventListener('shown.bs.modal', load);
+
+        load();
+        setInterval(function () { if (!document.hidden) load(); }, POLL_MS);
+        // Al volver a la pestaña, se actualiza de inmediato
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+    });
+</script>

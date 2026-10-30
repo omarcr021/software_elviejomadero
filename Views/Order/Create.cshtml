@@ -1,0 +1,139 @@
+@using software_elviejomadero.Models
+@model software_elviejomadero.ViewModels.CreateOrderViewModel
+
+@{
+    ViewData["Title"] = "Nuevo pedido";
+
+    async Task RenderOptions(int selectedId)
+    {
+        <option value="0">Selecciona un plato…</option>
+        foreach (var d in Model.Dishes)
+        {
+            <option value="@d.Id" selected="@(d.Id == selectedId)">@d.CategoryName · @d.Name — S/ @d.Price.ToString("F2")</option>
+        }
+    }
+}
+
+<div class="row justify-content-center py-3">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="card-header bg-white border-bottom p-4">
+                <h1 class="h4 fw-bold text-madero-dark mb-1">Nuevo pedido</h1>
+                <p class="text-muted small mb-0">Al enviarlo, el pedido aparece en "Nuevos" en la pantalla de cocina.</p>
+            </div>
+
+            <form asp-action="Create" method="post" id="orderForm" autocomplete="off">
+                @Html.AntiForgeryToken()
+
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2 px-3 small rounded-3 mb-3 border-0"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-secondary" for="orderType">Tipo de pedido</label>
+                            <select name="Type" id="orderType" class="form-select">
+                                <option value="1" selected="@(Model.Type == OrderType.Mesa)">Mesa</option>
+                                <option value="2" selected="@(Model.Type == OrderType.ParaLlevar)">Para llevar</option>
+                                <option value="3" selected="@(Model.Type == OrderType.Delivery)">Delivery</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3" id="tableBox">
+                            <label class="form-label small fw-semibold text-secondary" for="tableNumber">Mesa</label>
+                            <input type="number" name="TableNumber" id="tableNumber" value="@Model.TableNumber" min="1" max="99" class="form-control" />
+                        </div>
+
+                        <div class="col-md" id="customerBox">
+                            <label class="form-label small fw-semibold text-secondary" for="customerName" id="customerLabel">Cliente</label>
+                            <input type="text" name="CustomerName" id="customerName" value="@Model.CustomerName" maxlength="120" class="form-control" />
+                        </div>
+                    </div>
+
+                    <label class="form-label small fw-semibold text-secondary">Platos</label>
+                    <div id="lines">
+                        @for (var i = 0; i < Model.Lines.Count; i++)
+                        {
+                            <div class="row g-2 align-items-center mb-2 order-line">
+                                <div class="col-8">
+                                    <select name="Lines[@i].DishId" class="form-select">
+                                        @{ await RenderOptions(Model.Lines[i].DishId); }
+                                    </select>
+                                </div>
+                                <div class="col-3">
+                                    <input type="number" name="Lines[@i].Quantity" value="@Model.Lines[i].Quantity" min="1" max="999" class="form-control" />
+                                </div>
+                                <div class="col-1 text-end">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-remove-line title="Quitar">&times;</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill mb-3" id="addLine">
+                        <i class="bi bi-plus-lg me-1"></i> Agregar otro plato
+                    </button>
+
+                    <div class="mb-1">
+                        <label class="form-label small fw-semibold text-secondary" for="note">Nota para cocina</label>
+                        <textarea name="Note" id="note" rows="2" maxlength="500" class="form-control" placeholder="Ej: sin ají en las cremas">@Model.Note</textarea>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light border-top p-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-madero rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-send me-1"></i> Enviar a cocina
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<template id="lineTemplate">
+    <div class="row g-2 align-items-center mb-2 order-line">
+        <div class="col-8">
+            <select name="Lines[__i__].DishId" class="form-select">
+                @{ await RenderOptions(0); }
+            </select>
+        </div>
+        <div class="col-3">
+            <input type="number" name="Lines[__i__].Quantity" value="1" min="1" max="999" class="form-control" />
+        </div>
+        <div class="col-1 text-end">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-remove-line title="Quitar">&times;</button>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <script>
+        (function () {
+            const typeSel = document.getElementById('orderType');
+            const tableBox = document.getElementById('tableBox');
+            const customerLabel = document.getElementById('customerLabel');
+            const linesEl = document.getElementById('lines');
+            let nextIndex = @Model.Lines.Count;
+
+            function syncType() {
+                const isTable = typeSel.value === '1';
+                tableBox.hidden = !isTable;
+                customerLabel.textContent = isTable ? 'Cliente (opcional)' : 'Cliente';
+            }
+            typeSel.addEventListener('change', syncType);
+            syncType();
+
+            document.getElementById('addLine').addEventListener('click', function () {
+                const html = document.getElementById('lineTemplate').innerHTML.replaceAll('__i__', String(nextIndex++));
+                linesEl.insertAdjacentHTML('beforeend', html);
+            });
+
+            // No se elimina la fila (rompería los índices del formulario): se vacía y se oculta.
+            linesEl.addEventListener('click', function (e) {
+                const btn = e.target.closest('[data-remove-line]');
+                if (!btn) return;
+                const row = btn.closest('.order-line');
+                row.querySelector('select').value = '0';
+                row.hidden = true;
+            });
+        })();
+    </script>
+}

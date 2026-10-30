@@ -6,6 +6,7 @@ using software_elviejomadero.Services.Interfaces;
 namespace software_elviejomadero.Controllers
 {
     // HU-09: pantalla "Cocina - comandas" para el rol Cocinero (el Administrador puede supervisarla).
+    // HU-10: los pedidos de "Nuevos" y "En preparación" se priorizan por tiempo de espera.
     [Authorize(Roles = "Cocinero,Administrador")]
     public class KitchenController : Controller
     {
@@ -20,6 +21,7 @@ namespace software_elviejomadero.Controllers
         public async Task<IActionResult> Index()
         {
             var model = await _kitchenService.GetBoardAsync();
+            model.ApplyPriorityOrder(); // HU-10
             return View(model);
         }
 
@@ -30,6 +32,7 @@ namespace software_elviejomadero.Controllers
         public async Task<IActionResult> Board()
         {
             var model = await _kitchenService.GetBoardAsync();
+            model.ApplyPriorityOrder(); // HU-10
             return PartialView("_Board", model);
         }
 
