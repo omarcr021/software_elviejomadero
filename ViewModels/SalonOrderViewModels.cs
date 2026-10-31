@@ -8,6 +8,17 @@ namespace software_elviejomadero.ViewModels
         public List<RestaurantTable> Tables { get; set; } = new();
         // HU-02: pedidos del salón que cocina ya dejó listos para entregar.
         public List<ReadyToServeViewModel> ReadyToServe { get; set; } = new();
+        // HU-05: se utiliza junto con las mesas existentes de HU-02.
+        public List<SalonTableAttentionViewModel> Attention { get; set; } = new();
+    }
+
+    // HU-05: el inicio corresponde al envío a cocina (CreatedAt del pedido de salón).
+    public class SalonTableAttentionViewModel
+    {
+        public int TableId { get; set; }
+        public decimal TotalConsumption { get; set; }
+        public int? EstimatedServiceMinutes { get; set; }
+        public DateTime SentToKitchenAtUtc { get; set; }
     }
 
     // HU-02: etiqueta visible de la mesa ("M3" -> "Mesa 3").
@@ -57,6 +68,8 @@ namespace software_elviejomadero.ViewModels
         public string? CustomerName { get; set; }
         public string? OrderStatus { get; set; }
         public decimal Total { get; set; }
+        public int? EstimatedServiceMinutes { get; set; }
+        public DateTime? SentToKitchenAtUtc { get; set; }
         public List<DispatchItemViewModel> Items { get; set; } = new();
         // HU-07: lista de pedidos de la mesa (una mesa puede tener uno o más pedidos).
         public List<TableOrderConsumptionViewModel> Orders { get; set; } = new();
@@ -96,5 +109,6 @@ namespace software_elviejomadero.ViewModels
         public string OrderCode { get; set; } = string.Empty;
         public string TableNumber { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
+        public int? EstimatedServiceMinutes { get; set; }
     }
 }

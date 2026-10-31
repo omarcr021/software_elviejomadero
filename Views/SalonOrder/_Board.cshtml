@@ -1,6 +1,10 @@
 @model software_elviejomadero.ViewModels.SalonTablesViewModel
 @using software_elviejomadero.Models
 @using software_elviejomadero.ViewModels
+@using System.Globalization
+@{
+    var attentionByTable = Model.Attention.ToDictionary(a => a.TableId);
+}
 
 <section class="vm-mozo-section" aria-labelledby="readyTitle">
     <div class="vm-mozo-section-head">
@@ -53,6 +57,9 @@
         @foreach (var table in Model.Tables)
         {
             var free = table.Status == TableStatuses.Free;
+            attentionByTable.TryGetValue(table.Id, out var attention);
+            var hasEstimate = !free && attention?.EstimatedServiceMinutes != null;
+            var startedAt = attention?.SentToKitchenAtUtc.ToString("O", CultureInfo.InvariantCulture) ?? "";
             <button type="button" class="vm-mozo-table @(free ? "is-free" : "is-occupied")" data-table-id="@table.Id"
                     aria-label="@TableLabels.Format(table.Number), @table.Status">
                 <svg xmlns="http://www.w3.org/2000/svg" class="vm-mozo-table-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -63,6 +70,25 @@
                 </svg>
                 <span class="vm-mozo-table-name">@TableLabels.Format(table.Number)</span>
                 <span class="vm-mozo-state @(free ? "is-free" : "is-occupied")">@table.Status</span>
+                @if (!free && attention != null)
+                {
+                    <span class="vm-hu05-metrics">
+                        @if (hasEstimate)
+                        {
+                            <span class="vm-hu05-time" data-hu05-start="@startedAt"
+                                  data-hu05-estimate="@(attention.EstimatedServiceMinutes.Value)"
+                                  aria-label="Tiempo transcurrido y estimado">
+                                <i class="bi bi-clock" aria-hidden="true"></i>
+                                <span data-hu05-minutes>0/@attention.EstimatedServiceMinutes min</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="vm-hu05-pending">Estimación no disponible</span>
+                        }
+                        <strong class="vm-hu05-total">S/ @attention.TotalConsumption.ToString("F2", CultureInfo.InvariantCulture)</strong>
+                    </span>
+                }
             </button>
         }
     </div>
