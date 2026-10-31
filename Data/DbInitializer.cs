@@ -55,6 +55,13 @@ namespace software_elviejomadero.Data
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
             ");
 
+            // HU-07: asegurar columna IsBilled en RestaurantTables
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""RestaurantTables"" ADD COLUMN ""IsBilled"" INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { /* Columna ya existente */ }
+
             // HU-02/HU-03: el salón tiene 12 mesas (M1..M12). Solo se crean las que falten.
             var existingTables = await context.RestaurantTables.Select(t => t.Number).ToListAsync();
             var missingTables = Enumerable.Range(1, 12).Select(i => $"M{i}")

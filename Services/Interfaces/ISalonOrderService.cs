@@ -14,5 +14,11 @@ namespace software_elviejomadero.Services.Interfaces
         Task<TableConsumptionViewModel?> GetTableConsumptionAsync(int tableId);
         Task<SalonNewOrderViewModel?> GetAddItemsContextAsync(int tableId);
         Task<(bool Succeeded, string? ErrorMessage, Order? UpdatedOrder)> AddItemsAsync(SalonNewOrderViewModel request, string waiterId);
+
+        // HU-07: Visualizar detalle de mesa (Sprint 3)
+        Task<(bool Succeeded, string? ErrorMessage)> ServeOrderAsync(int orderId);
+        Task<SalonBillViewModel?> GenerateBillAsync(int tableId, string? waiterId = null);
+        Task<(bool Succeeded, string? ErrorMessage)> FreeTableAsync(int tableId);
+        Task<SalonNewOrderViewModel?> GetNewOrderForTableAsync(int tableId);
     }
 }

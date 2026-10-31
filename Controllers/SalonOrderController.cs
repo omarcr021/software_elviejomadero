@@ -6,8 +6,8 @@ using software_elviejomadero.ViewModels;
 
 namespace software_elviejomadero.Controllers
 {
-    // HU-02 (estados de mesa) y HU-03 (registrar pedido del salón).
-    // Solo mozo o administrador pueden ver las mesas.
+    // HU-02 (estados de mesa), HU-03 (registrar pedido) y HU-07 (visualizar detalle de mesa).
+    // Solo mozo o administrador pueden ver y gestionar las mesas.
     [Authorize(Roles = "Mozo,Administrador")]
     public class SalonOrderController : Controller
     {
@@ -36,8 +36,7 @@ namespace software_elviejomadero.Controllers
             return PartialView("_Board", await BuildBoardAsync());
         }
 
-        // HU-02 (criterios 2 y 3): al tocar una mesa libre se ofrece tomar un pedido nuevo;
-        // al tocar una ocupada se muestra su consumo con la opción de agregar más platos.
+        // HU-02 y HU-07: detalle de mesa con sus pedidos y consumos.
         [HttpGet]
         public async Task<IActionResult> TableDetail(int tableId)
         {
@@ -47,8 +46,19 @@ namespace software_elviejomadero.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> New(int tableId)
+        public async Task<IActionResult> New(int tableId, bool additional = false)
         {
+            if (additional)
+            {
+                var addModel = await _salon.GetNewOrderForTableAsync(tableId);
+                if (addModel == null)
+                {
+                    TempData["ErrorMessage"] = "La mesa no existe.";
+                    return RedirectToAction(nameof(Index));
+                }
+                return View(await BuildNewOrderModelAsync(addModel));
+            }
+
             var table = await _salon.GetAvailableTableAsync(tableId);
             if (table == null)
             {
@@ -110,7 +120,7 @@ namespace software_elviejomadero.Controllers
             if (!result.Succeeded || result.CreatedOrder == null)
             {
                 TempData["ErrorMessage"] = result.ErrorMessage ?? "No se pudo registrar el pedido.";
-                return RedirectToAction(nameof(New), new { tableId = request.TableId });
+                return RedirectToAction(nameof(New), new { tableId = request.TableId, additional = request.IsAdditionalOrder });
             }
             return RedirectToAction(nameof(Confirmation), new { id = result.CreatedOrder.Id });
         }
@@ -120,6 +130,55 @@ namespace software_elviejomadero.Controllers
         {
             var result = await _salon.GetConfirmationAsync(id);
             return result == null ? NotFound() : View(result);
+        }
+
+        // HU-07 CA-02: Servir pedido a la mesa
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ServeOrder(int orderId, int? tableId)
+        {
+            var result = await _salon.ServeOrderAsync(orderId);
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" && tableId.HasValue)
+            {
+                var detail = await _salon.GetTableConsumptionAsync(tableId.Value);
+                return detail == null ? NotFound() : PartialView("_TableDetail", detail);
+            }
+
+            TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded
+                ? "El pedido fue marcado como servido en la mesa."
+                : result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
+        }
+
+        // HU-07 CA-04: Generar boleta
+        [HttpGet]
+        public async Task<IActionResult> Bill(int tableId)
+        {
+            var waiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var bill = await _salon.GenerateBillAsync(tableId, waiterId);
+            if (bill == null)
+            {
+                TempData["ErrorMessage"] = "La mesa no está ocupada o no tiene pedidos para facturar.";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(bill);
+        }
+
+        // HU-07 CA-05: Liberar mesa (solo tras generar boleta)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FreeTable(int tableId)
+        {
+            var result = await _salon.FreeTableAsync(tableId);
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { succeeded = result.Succeeded, errorMessage = result.ErrorMessage });
+            }
+
+            TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded
+                ? "Mesa liberada correctamente."
+                : result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
         }
     }
 }

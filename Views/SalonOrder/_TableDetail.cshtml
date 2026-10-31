@@ -1,12 +1,16 @@
 @model software_elviejomadero.ViewModels.TableConsumptionViewModel
 @using System.Globalization
+@using software_elviejomadero.Models
 @{
     string Money(decimal v) => "S/ " + v.ToString("F2", CultureInfo.InvariantCulture);
 }
+
+<form id="tableDetailAntiTokenForm" style="display:none;">@Html.AntiForgeryToken()</form>
+
 <div class="vm-mozo-modal-head">
     <div>
         <h2 class="vm-mozo-modal-title" id="tableModalTitle">@Model.TableLabel</h2>
-        <span class="vm-mozo-state @(Model.IsFree ? "is-free" : "is-occupied")">@Model.Status</span>
+        <p class="vm-mozo-modal-sub">Detalle de lo que está consumiendo la mesa.</p>
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
@@ -21,26 +25,81 @@
 }
 else
 {
-    @* Criterio 3: mesa ocupada -> detalle del consumo + agregar más platos *@
-    @if (Model.OrderCode == null)
-    {
-        <p class="vm-mozo-modal-text">La mesa figura como ocupada, pero no tiene un pedido activo.</p>
-    }
-    else
-    {
-        <p class="vm-mozo-modal-meta">@Model.OrderCode · @Model.CustomerName · <span>@Model.OrderStatus</span></p>
-        <div class="vm-mozo-consumption">
-            @foreach (var item in Model.Items)
-            {
-                <div class="vm-mozo-consumption-row">
-                    <span>@item.Quantity× @item.Name</span>
-                    <span>@Money(item.LineTotal)</span>
+    @* HU-07: Consumo total de la mesa *@
+    <div class="vm-mozo-total-box">
+        <span class="vm-mozo-total-label">Consumo total</span>
+        <strong class="vm-mozo-total-val">@Money(Model.Total)</strong>
+    </div>
+
+    @* HU-07: Tarjetas de cada pedido de la mesa *@
+    <div class="vm-mozo-orders-list">
+        @if (!Model.Orders.Any())
+        {
+            <div class="vm-mozo-order-card text-center text-muted py-3">
+                No hay pedidos registrados para esta mesa.
+            </div>
+        }
+        @foreach (var order in Model.Orders)
+        {
+            var badgeClass = order.IsReadyToServe ? "is-ready" :
+                             order.Status == OrderStatuses.Served ? "is-served" :
+                             order.Status == OrderStatuses.InPreparation ? "is-prep" : "is-kitchen";
+
+            <div class="vm-mozo-order-card" data-order-id="@order.OrderId">
+                <div class="vm-mozo-order-head">
+                    <strong class="vm-mozo-order-code">@order.OrderCode</strong>
+                    <span class="vm-mozo-order-badge @badgeClass">@order.StatusDisplay</span>
                 </div>
-            }
-            <div class="vm-mozo-consumption-total"><span>Total</span><strong>@Money(Model.Total)</strong></div>
-        </div>
-        <a asp-controller="SalonOrder" asp-action="AddItems" asp-route-tableId="@Model.TableId" class="vm-btn-save vm-mozo-modal-action text-decoration-none">
-            <i class="bi bi-plus-circle me-1"></i> Agregar más platos
+
+                <div class="vm-mozo-order-items">
+                    @foreach (var item in order.Items)
+                    {
+                        <div class="vm-mozo-order-item-row">
+                            <div class="vm-mozo-item-info">
+                                <span class="vm-mozo-item-qty">@item.Quantity&times;</span>
+                                <span class="vm-mozo-item-name">@item.Name</span>
+                            </div>
+                            <span class="vm-mozo-item-price">@Money(item.LineTotal)</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="vm-mozo-order-subtotal">
+                    <span>Subtotal</span>
+                    <strong>@Money(order.Subtotal)</strong>
+                </div>
+
+                @if (order.IsReadyToServe)
+                {
+                    @* Detalle 3: El botón "Servir a la mesa" solo se muestra cuando el pedido está en estado "Listo para servir" *@
+                    <form class="vm-serve-form" asp-action="ServeOrder" asp-controller="SalonOrder" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                        <input type="hidden" name="tableId" value="@Model.TableId" />
+                        <button type="submit" class="vm-btn-serve">
+                            <i class="bi bi-bell me-1"></i> Servir a la mesa
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+
+    @* HU-07: Botones de acción generales de la mesa *@
+    <div class="vm-mozo-table-actions">
+        <a asp-action="Bill" asp-controller="SalonOrder" asp-route-tableId="@Model.TableId" class="vm-btn-salon-action text-decoration-none">
+            <i class="bi bi-file-earmark-text me-1"></i> Generar boleta
         </a>
-    }
+
+        <a asp-action="New" asp-controller="SalonOrder" asp-route-tableId="@Model.TableId" asp-route-additional="true" class="vm-btn-salon-action text-decoration-none">
+            <i class="bi bi-plus me-1"></i> Agregar pedido a esta mesa
+        </a>
+
+        @* Detalle 4: Solo se puede liberar la mesa después de generar la boleta *@
+        <button type="button" class="vm-btn-salon-action vm-btn-free @(!Model.IsBilled ? "is-disabled" : "")" 
+                data-free-table="@Model.TableId" 
+                @(!Model.IsBilled ? "disabled title='Solo se puede liberar la mesa después de generar la boleta.'" : "")>
+            <i class="bi bi-door-open me-1"></i> Liberar mesa
+        </button>
+    </div>
 }

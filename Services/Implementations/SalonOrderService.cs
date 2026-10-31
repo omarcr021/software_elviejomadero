@@ -37,6 +37,22 @@ namespace software_elviejomadero.Services.Implementations
         public Task<RestaurantTable?> GetAvailableTableAsync(int tableId) => _context.RestaurantTables
             .AsNoTracking().FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive && t.Status == TableStatuses.Free);
 
+        public async Task<SalonNewOrderViewModel?> GetNewOrderForTableAsync(int tableId)
+        {
+            var table = await _context.RestaurantTables.AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive);
+            if (table == null) return null;
+
+            var activeOrder = await ActiveOrderOf(table.Id).AsNoTracking().FirstOrDefaultAsync();
+            return new SalonNewOrderViewModel
+            {
+                TableId = table.Id,
+                TableNumber = table.Number,
+                CustomerName = activeOrder?.CustomerName ?? string.Empty,
+                IsAdditionalOrder = table.Status == TableStatuses.Occupied
+            };
+        }
+
         public async Task<(bool Succeeded, string? ErrorMessage, Order? CreatedOrder)> CreateAsync(SalonNewOrderViewModel request, string waiterId)
         {
             if (string.IsNullOrWhiteSpace(waiterId) || !await _context.Users.AnyAsync(u => u.Id == waiterId && u.IsActive))
@@ -59,17 +75,23 @@ namespace software_elviejomadero.Services.Implementations
             if (dishes.Count != dishIds.Length)
                 return (false, "Uno o más platos ya no están disponibles.", null);
 
-            // Transacción + concurrencia optimista: dos mozos no pueden ocupar la misma mesa.
+            // Transacción + concurrencia optimista
             await using var tx = _context.Database.IsRelational()
                 ? await _context.Database.BeginTransactionAsync()
                 : null;
             try
             {
                 var table = await _context.RestaurantTables.FirstOrDefaultAsync(t => t.Id == request.TableId);
-                if (table == null || !table.IsActive || table.Status != TableStatuses.Free)
+                if (table == null || !table.IsActive)
+                    return (false, "La mesa no está disponible.", null);
+
+                // HU-07 CA-03: si se agrega un nuevo pedido a una mesa ocupada (IsAdditionalOrder), se permite.
+                if (table.Status != TableStatuses.Free && !request.IsAdditionalOrder && !request.AddToExisting)
                     return (false, "La mesa ya está ocupada o no está disponible.", null);
 
                 table.Status = TableStatuses.Occupied;
+                table.IsBilled = false; // Al haber un nuevo pedido, la boleta anterior queda invalidada hasta volverse a generar
+
                 var items = quantities.Select(i =>
                 {
                     var dish = dishes[i.DishId];
@@ -79,6 +101,7 @@ namespace software_elviejomadero.Services.Implementations
                         UnitPrice = dish.Price, Subtotal = dish.Price * i.Quantity
                     };
                 }).ToList();
+
                 var order = new Order
                 {
                     OrderCode = await _orders.GenerateUniqueOrderCodeAsync(OrderTypes.DineIn),
@@ -121,7 +144,7 @@ namespace software_elviejomadero.Services.Implementations
             };
         }
 
-        // ---------------- HU-02: estados de mesa ----------------
+        // ---------------- HU-02 y HU-07: estados de mesa y consumo ----------------
 
         // Pedido activo de una mesa ocupada: el más reciente del salón que no se entregó.
         private IQueryable<Order> ActiveOrderOf(int tableId) => _context.Orders
@@ -130,7 +153,7 @@ namespace software_elviejomadero.Services.Implementations
 
         public async Task<List<ReadyToServeViewModel>> GetReadyToServeAsync()
         {
-            // El salón usa el mismo estado "Listo para despacho" cuando cocina termina el pedido (HU-09).
+            // El salón usa el estado "Listo para despacho" cuando cocina termina el pedido (HU-09).
             var orders = await _context.Orders.AsNoTracking().Include(o => o.Table)
                 .Where(o => o.OrderType == OrderTypes.DineIn && o.Status == OrderStatuses.ReadyForDispatch)
                 .OrderBy(o => o.ReadyAt ?? o.CreatedAt).ToListAsync();
@@ -150,23 +173,54 @@ namespace software_elviejomadero.Services.Implementations
 
             var result = new TableConsumptionViewModel
             {
-                TableId = table.Id, TableLabel = TableLabels.Format(table.Number),
-                Status = table.Status, IsFree = table.Status == TableStatuses.Free
+                TableId = table.Id,
+                TableLabel = TableLabels.Format(table.Number),
+                Status = table.Status,
+                IsFree = table.Status == TableStatuses.Free,
+                IsBilled = table.IsBilled
             };
             if (result.IsFree) return result;
 
-            var order = await ActiveOrderOf(table.Id).AsNoTracking().Include(o => o.Items).FirstOrDefaultAsync();
-            if (order != null)
+            var orders = await _context.Orders
+                .AsNoTracking()
+                .Include(o => o.Items)
+                .Where(o => o.TableId == table.Id && o.OrderType == OrderTypes.DineIn && o.Status != OrderStatuses.Delivered)
+                .OrderBy(o => o.CreatedAt)
+                .ThenBy(o => o.Id)
+                .ToListAsync();
+
+            if (orders.Count > 0)
             {
-                result.OrderCode = order.OrderCode;
-                result.CustomerName = order.CustomerName;
-                result.OrderStatus = order.Status;
-                result.Total = order.TotalAmount;
-                result.Items = order.Items.OrderBy(i => i.Id).Select(i => new DispatchItemViewModel
+                result.CustomerName = orders.First().CustomerName;
+                result.Orders = orders.Select(o => new TableOrderConsumptionViewModel
                 {
-                    Name = i.DishName, Quantity = i.Quantity, UnitPrice = i.UnitPrice
+                    OrderId = o.Id,
+                    OrderCode = o.OrderCode,
+                    Status = o.Status,
+                    StatusDisplay = o.Status == OrderStatuses.ReadyForDispatch ? "Listo para servir" : o.Status,
+                    Subtotal = o.TotalAmount,
+                    Items = o.Items.OrderBy(i => i.Id).Select(i => new DispatchItemViewModel
+                    {
+                        Name = i.DishName,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice
+                    }).ToList()
+                }).ToList();
+
+                result.Total = result.Orders.Sum(o => o.Subtotal);
+
+                // HU-02 compatibilidad
+                var first = orders.First();
+                result.OrderCode = first.OrderCode;
+                result.OrderStatus = first.Status;
+                result.Items = orders.SelectMany(o => o.Items).OrderBy(i => i.Id).Select(i => new DispatchItemViewModel
+                {
+                    Name = i.DishName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
                 }).ToList();
             }
+
             return result;
         }
 
@@ -237,6 +291,7 @@ namespace software_elviejomadero.Services.Implementations
                 order.TotalItemsCount = order.Items.Sum(i => i.Quantity);
                 // Los platos nuevos deben pasar otra vez por cocina.
                 order.Status = OrderStatuses.InKitchen;
+                table.IsBilled = false;
                 await _context.SaveChangesAsync();
                 return (true, null, order);
             }
@@ -248,6 +303,116 @@ namespace software_elviejomadero.Services.Implementations
             {
                 return (false, "No se pudieron agregar los platos. Inténtalo de nuevo.", null);
             }
+        }
+
+        // ---------------- HU-07: Métodos de Gestión de Mesa ----------------
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> ServeOrderAsync(int orderId)
+        {
+            var order = await _context.Orders.Include(o => o.Table)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.OrderType == OrderTypes.DineIn);
+
+            if (order == null)
+                return (false, "El pedido no existe o no corresponde a una comanda de salón.");
+
+            if (order.Status != OrderStatuses.ReadyForDispatch)
+                return (false, "Solo se pueden servir a la mesa los pedidos que estén en estado 'Listo para servir'.");
+
+            order.Status = OrderStatuses.Served;
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public async Task<SalonBillViewModel?> GenerateBillAsync(int tableId, string? waiterId = null)
+        {
+            var table = await _context.RestaurantTables
+                .FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive && t.Status == TableStatuses.Occupied);
+            if (table == null) return null;
+
+            var orders = await _context.Orders
+                .Include(o => o.Items)
+                .Where(o => o.TableId == tableId && o.OrderType == OrderTypes.DineIn && o.Status != OrderStatuses.Delivered)
+                .OrderBy(o => o.CreatedAt)
+                .ThenBy(o => o.Id)
+                .ToListAsync();
+
+            if (orders.Count == 0) return null;
+
+            table.IsBilled = true;
+            await _context.SaveChangesAsync();
+
+            string waiterName = "Mozo de salón";
+            if (!string.IsNullOrWhiteSpace(waiterId))
+            {
+                var waiter = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == waiterId);
+                if (waiter != null && !string.IsNullOrWhiteSpace(waiter.FullName))
+                    waiterName = waiter.FullName;
+            }
+
+            var mappedOrders = orders.Select(o => new TableOrderConsumptionViewModel
+            {
+                OrderId = o.Id,
+                OrderCode = o.OrderCode,
+                Status = o.Status,
+                StatusDisplay = o.Status == OrderStatuses.ReadyForDispatch ? "Listo para servir" : o.Status,
+                Subtotal = o.TotalAmount,
+                Items = o.Items.OrderBy(i => i.Id).Select(i => new DispatchItemViewModel
+                {
+                    Name = i.DishName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList()
+            }).ToList();
+
+            var consolidated = orders.SelectMany(o => o.Items)
+                .GroupBy(i => new { i.DishName, i.UnitPrice })
+                .Select(g => new DispatchItemViewModel
+                {
+                    Name = g.Key.DishName,
+                    Quantity = g.Sum(x => x.Quantity),
+                    UnitPrice = g.Key.UnitPrice
+                })
+                .OrderBy(i => i.Name)
+                .ToList();
+
+            return new SalonBillViewModel
+            {
+                BillNumber = $"B001-{table.Id:D4}-{DateTime.UtcNow:MMddHHmm}",
+                TableId = table.Id,
+                TableLabel = TableLabels.Format(table.Number),
+                CustomerName = orders.First().CustomerName,
+                WaiterName = waiterName,
+                EmittedAt = DateTime.UtcNow,
+                Orders = mappedOrders,
+                ConsolidatedItems = consolidated,
+                Total = orders.Sum(o => o.TotalAmount)
+            };
+        }
+
+        public async Task<(bool Succeeded, string? ErrorMessage)> FreeTableAsync(int tableId)
+        {
+            var table = await _context.RestaurantTables
+                .FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive && t.Status == TableStatuses.Occupied);
+            if (table == null)
+                return (false, "La mesa no está ocupada o no existe.");
+
+            // Detalle 4: Solo se puede liberar la mesa después de generar la boleta.
+            if (!table.IsBilled)
+                return (false, "Solo se puede liberar la mesa después de generar la boleta.");
+
+            var activeOrders = await _context.Orders
+                .Where(o => o.TableId == tableId && o.OrderType == OrderTypes.DineIn && o.Status != OrderStatuses.Delivered)
+                .ToListAsync();
+
+            foreach (var o in activeOrders)
+            {
+                o.Status = OrderStatuses.Delivered;
+            }
+
+            table.Status = TableStatuses.Free;
+            table.IsBilled = false;
+            await _context.SaveChangesAsync();
+            return (true, null);
         }
     }
 }

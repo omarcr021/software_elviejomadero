@@ -307,3 +307,350 @@
         gap: 0.75rem;
     }
 }
+
+
+/* HU-07: Detalle de mesa y boleta */
+.vm-mozo-modal-sub {
+    font-size: 0.84rem;
+    color: var(--mz-muted);
+    margin: 0;
+}
+
+.vm-mozo-total-box {
+    background: #ffffff;
+    border: 1px solid var(--mz-line);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.15rem;
+}
+
+.vm-mozo-total-label {
+    color: var(--mz-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.vm-mozo-total-val {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #24160e;
+}
+
+.vm-mozo-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+    margin-bottom: 1.15rem;
+}
+
+.vm-mozo-order-card {
+    background: #ffffff;
+    border: 1px solid var(--mz-line);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+}
+
+.vm-mozo-order-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+}
+
+.vm-mozo-order-code {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #24160e;
+}
+
+.vm-mozo-order-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.15rem 0.75rem;
+    letter-spacing: 0.01em;
+}
+
+.vm-mozo-order-badge.is-ready {
+    background: #e2ede2;
+    color: #3b6844;
+    border: 1px solid #cfe0d0;
+}
+
+.vm-mozo-order-badge.is-served {
+    background: #f0eae1;
+    color: #6e6155;
+    border: 1px solid #e2d7c8;
+}
+
+.vm-mozo-order-badge.is-prep {
+    background: #fdf3e7;
+    color: #b45e12;
+    border: 1px solid #f6deb8;
+}
+
+.vm-mozo-order-badge.is-kitchen {
+    background: #f8f3ec;
+    color: var(--mz-muted);
+    border: 1px solid var(--mz-line);
+}
+
+.vm-mozo-order-items {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+}
+
+.vm-mozo-order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    color: #3d2817;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid #f4ede4;
+}
+
+.vm-mozo-item-qty {
+    font-weight: 700;
+    color: #cf6b29;
+    margin-right: 0.45rem;
+}
+
+.vm-mozo-item-name {
+    font-weight: 500;
+    color: #24160e;
+}
+
+.vm-mozo-item-price {
+    font-weight: 600;
+    color: #3d2817;
+}
+
+.vm-mozo-order-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    padding: 0.65rem 0 0.85rem;
+    color: var(--mz-muted);
+}
+
+.vm-mozo-order-subtotal strong {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #24160e;
+}
+
+.vm-btn-serve {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #58351f;
+    color: #ffffff;
+    border: 0;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.vm-btn-serve:hover {
+    background: #462917;
+}
+
+.vm-mozo-table-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: 0.5rem;
+}
+
+.vm-btn-salon-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--mz-line);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #3d2817;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    text-align: center;
+}
+
+.vm-btn-salon-action:hover {
+    background: #fbf8f4;
+    border-color: #cfc2b1;
+    color: #24160e;
+}
+
+.vm-btn-free {
+    color: #8c3b28;
+}
+
+.vm-btn-free:hover:not(:disabled) {
+    background: #fdf5f3;
+    border-color: #e5b8ad;
+    color: #732a19;
+}
+
+.vm-btn-free:disabled,
+.vm-btn-free.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: #faf7f2;
+    border-color: #e8e0d5;
+    color: #9c9085;
+}
+
+/* Boleta de Venta */
+.vm-bill-page {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+}
+
+.vm-bill-card {
+    background: #ffffff;
+    border: 1px solid var(--mz-line);
+    border-radius: 16px;
+    padding: 2rem 1.8rem;
+    box-shadow: 0 4px 16px rgba(40, 22, 14, 0.06);
+}
+
+.vm-bill-header {
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+
+.vm-bill-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    margin-bottom: 0.25rem;
+}
+
+.vm-bill-brand h2 {
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #24160e;
+    margin: 0;
+}
+
+.vm-bill-sub {
+    font-size: 0.8rem;
+    color: var(--mz-muted);
+    margin: 0 0 0.75rem;
+}
+
+.vm-bill-badge-title {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #f0e8dc;
+    color: #58351f;
+    padding: 0.2rem 0.85rem;
+    border-radius: 999px;
+    margin-bottom: 0.4rem;
+}
+
+.vm-bill-number {
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #24160e;
+}
+
+.vm-bill-meta {
+    font-size: 0.84rem;
+    color: #5a4a3f;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.vm-bill-divider {
+    border-top: 1px dashed #dcd3c7;
+    margin: 1rem 0;
+}
+
+.vm-bill-table {
+    width: 100%;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.vm-bill-table th {
+    padding: 0.4rem 0.25rem;
+    color: var(--mz-muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid #efe8de;
+}
+
+.vm-bill-table td {
+    padding: 0.5rem 0.25rem;
+    color: #24160e;
+    border-bottom: 1px solid #f6f0e8;
+}
+
+.vm-bill-totals {
+    margin-bottom: 1.25rem;
+}
+
+.vm-bill-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #24160e;
+}
+
+.vm-bill-total-row strong {
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #24160e;
+}
+
+.vm-bill-footer {
+    text-align: center;
+    color: #8a7c71;
+    font-size: 0.8rem;
+}
+
+@media print {
+    body {
+        background: #ffffff !important;
+    }
+    .vm-topbar,
+    .d-print-none,
+    .vm-bill-actions {
+        display: none !important;
+    }
+    .vm-bill-card {
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+}

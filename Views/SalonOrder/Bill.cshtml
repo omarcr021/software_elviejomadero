@@ -1,0 +1,76 @@
+@model software_elviejomadero.ViewModels.SalonBillViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Boleta de Venta - " + Model.TableLabel;
+    string Money(decimal v) => "S/ " + v.ToString("F2", CultureInfo.InvariantCulture);
+}
+
+<link rel="stylesheet" href="~/css/mozo-salon.css" asp-append-version="true" />
+
+<div class="vm-admin-wrapper vm-bill-page">
+    <div class="vm-bill-actions d-print-none mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left me-1"></i> Volver al salón
+        </a>
+        <button type="button" class="btn btn-primary vm-btn-save" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Imprimir boleta
+        </button>
+    </div>
+
+    <div class="vm-bill-card">
+        <div class="vm-bill-header">
+            <div class="vm-bill-brand">
+                <span class="vm-logo-badge">VM</span>
+                <h2>El Viejo Madero</h2>
+            </div>
+            <p class="vm-bill-sub">Restaurante &middot; Comandas y Salón</p>
+            <div class="vm-bill-badge-title">BOLETA DE VENTA ELECTRÓNICA</div>
+            <div class="vm-bill-number">@Model.BillNumber</div>
+        </div>
+
+        <div class="vm-bill-meta">
+            <div><strong>Mesa:</strong> @Model.TableLabel</div>
+            <div><strong>Cliente:</strong> @Model.CustomerName</div>
+            <div><strong>Atendido por:</strong> @Model.WaiterName</div>
+            <div><strong>Fecha y hora:</strong> @Model.EmittedAt.ToString("dd/MM/yyyy HH:mm")</div>
+        </div>
+
+        <div class="vm-bill-divider"></div>
+
+        <table class="vm-bill-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Cant.</th>
+                    <th>Descripción</th>
+                    <th style="width: 25%; text-align: right;">P. Unit.</th>
+                    <th style="width: 25%; text-align: right;">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ConsolidatedItems)
+                {
+                    <tr>
+                        <td class="text-center font-monospace">@item.Quantity</td>
+                        <td>@item.Name</td>
+                        <td class="text-end">@Money(item.UnitPrice)</td>
+                        <td class="text-end fw-semibold">@Money(item.LineTotal)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="vm-bill-divider"></div>
+
+        <div class="vm-bill-totals">
+            <div class="vm-bill-total-row">
+                <span>Total a pagar</span>
+                <strong>@Money(Model.Total)</strong>
+            </div>
+        </div>
+
+        <div class="vm-bill-footer">
+            <p>¡Gracias por su preferencia!</p>
+            <small>Representación impresa de la Boleta de Venta Electrónica</small>
+        </div>
+    </div>
+</div>

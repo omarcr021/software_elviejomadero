@@ -18,6 +18,7 @@ namespace software_elviejomadero.Models
         public const string ReadyForDispatch = "Listo para despacho";
         public const string OnTheWay = "En camino";
         public const string Delivered = "Entregado";
+        public const string Served = "Servido";
     }
 
     public static class PaymentMethods

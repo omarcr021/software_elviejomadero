@@ -16,6 +16,8 @@ namespace software_elviejomadero.Models
         [Required, MaxLength(20)]
         public string Status { get; set; } = TableStatuses.Free;
         public bool IsActive { get; set; } = true;
+        // HU-07: Solo se puede liberar la mesa después de generar la boleta.
+        public bool IsBilled { get; set; } = false;
         public ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 }

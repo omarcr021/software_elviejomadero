@@ -17,7 +17,9 @@
     </div>
 </div>
 
-<!-- Detalle de mesa (HU-02, criterios 2 y 3) -->
+<form id="salonAntiTokenForm" style="display:none;">@Html.AntiForgeryToken()</form>
+
+<!-- Detalle de mesa (HU-02 y HU-07) -->
 <div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content vm-mozo-modal">
@@ -50,6 +52,84 @@
             modalBody.innerHTML = await res.text();
         } catch {
             modalBody.innerHTML = '<p class="vm-mozo-loading text-danger">No se pudo cargar la mesa. Inténtalo de nuevo.</p>';
+        }
+    });
+
+    // HU-07 CA-02: Servir a la mesa via AJAX sin recargar página
+    modalBody.addEventListener('submit', async e => {
+        const form = e.target.closest('.vm-serve-form');
+        if (!form) return;
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+            const formData = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            if (res.ok) {
+                modalBody.innerHTML = await res.text();
+                refresh();
+            } else {
+                alert('No se pudo marcar el pedido como servido.');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        } catch {
+            alert('Error al comunicar con el servidor.');
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
+
+    // HU-07 CA-05: Liberar mesa via AJAX
+    modalBody.addEventListener('click', async e => {
+        const freeBtn = e.target.closest('[data-free-table]');
+        if (!freeBtn || freeBtn.disabled) return;
+        if (!confirm('¿Confirmas que el cliente pagó y deseas liberar la mesa?')) return;
+        freeBtn.disabled = true;
+        try {
+            const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenEl ? tokenEl.value : '';
+            const formData = new URLSearchParams();
+            formData.append('tableId', freeBtn.dataset.freeTable);
+            if (token) formData.append('__RequestVerificationToken', token);
+
+            const headers = { 
+                'X-Requested-With': 'XMLHttpRequest', 
+                'Content-Type': 'application/x-www-form-urlencoded' 
+            };
+            if (token) headers['RequestVerificationToken'] = token;
+
+            const res = await fetch('@Url.Action("FreeTable", "SalonOrder")', {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            if (!res.ok) {
+                let errorText = 'Error al comunicar con el servidor.';
+                try {
+                    const errJson = await res.json();
+                    if (errJson && errJson.errorMessage) errorText = errJson.errorMessage;
+                } catch { }
+                alert(errorText);
+                freeBtn.disabled = false;
+                return;
+            }
+
+            const json = await res.json();
+            if (json.succeeded) {
+                modal.hide();
+                refresh();
+            } else {
+                alert(json.errorMessage || 'No se pudo liberar la mesa.');
+                freeBtn.disabled = false;
+            }
+        } catch (err) {
+            console.error('Error al liberar la mesa:', err);
+            alert('Error al liberar la mesa.');
+            freeBtn.disabled = false;
         }
     });
 
