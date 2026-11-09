@@ -18,7 +18,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? "Data Source=viejo_madero.db";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    options.UseSqlite(connectionString);
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 // 2. Configuración de ASP.NET Core Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

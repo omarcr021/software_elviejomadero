@@ -138,6 +138,206 @@ namespace software_elviejomadero.Services.Implementations
             return (true, null, generatedUserName);
         }
 
+        // HU-18 CA-01: Obtener datos del empleado para edición
+        public async Task<EditEmployeeViewModel?> GetEmployeeForEditAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return null;
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var primaryRole = roles.FirstOrDefault() ?? string.Empty;
+
+            return new EditEmployeeViewModel
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                DNI = user.DNI,
+                Phone = user.Phone,
+                UserName = user.UserName ?? string.Empty,
+                Role = primaryRole,
+                IsActive = user.IsActive
+            };
+        }
+
+        // HU-18 CA-02 & CA-03: Actualizar datos y rol del empleado
+        public async Task<(bool Success, string? ErrorMessage)> UpdateEmployeeAsync(EditEmployeeViewModel model, string currentAdminId)
+        {
+            if (string.IsNullOrWhiteSpace(model.Id))
+                return (false, "Identificador de empleado no válido.");
+
+            var user = await _userManager.FindByIdAsync(model.Id);
+            if (user == null)
+                return (false, "El empleado no fue encontrado.");
+
+            // Detalle 5: El administrador no puede desactivarse a sí mismo
+            if (!string.IsNullOrEmpty(currentAdminId) && user.Id == currentAdminId && !model.IsActive)
+                return (false, "El administrador no puede desactivarse a sí mismo.");
+
+            // 1. Validaciones de formato (HU-17)
+            if (string.IsNullOrWhiteSpace(model.FullName))
+                return (false, "El nombre completo es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(model.DNI) || !Regex.IsMatch(model.DNI.Trim(), @"^\d{8}$"))
+                return (false, "El DNI debe tener exactamente 8 dígitos numéricos.");
+
+            if (string.IsNullOrWhiteSpace(model.Phone) || !Regex.IsMatch(model.Phone.Trim(), @"^\d{9}$"))
+                return (false, "El teléfono debe tener exactamente 9 dígitos numéricos.");
+
+            if (string.IsNullOrWhiteSpace(model.Role) || !ValidRoles.Contains(model.Role))
+                return (false, "Debe seleccionar un rol válido para el colaborador.");
+
+            // 2. Validar que DNI no pertenezca a otro usuario
+            var dniTrimmed = model.DNI.Trim();
+            var dniExists = await _context.Users.AnyAsync(u => u.DNI == dniTrimmed && u.Id != user.Id);
+            if (dniExists)
+                return (false, "El DNI ya se encuentra registrado por otro colaborador.");
+
+            // 3. Actualizar datos básicos
+            user.FullName = model.FullName.Trim();
+            user.DNI = dniTrimmed;
+            user.Phone = model.Phone.Trim();
+            user.IsActive = model.IsActive;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                var error = updateResult.Errors.FirstOrDefault()?.Description ?? "Error al actualizar los datos del empleado.";
+                _logger.LogError("Error al actualizar usuario {Id}: {Error}", user.Id, error);
+                return (false, error);
+            }
+
+            // 4. Cambiar rol si es necesario (CA-03)
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            var currentRole = currentRoles.FirstOrDefault();
+            if (currentRole != model.Role)
+            {
+                if (currentRoles.Any())
+                {
+                    await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                }
+                var addRoleResult = await _userManager.AddToRoleAsync(user, model.Role);
+                if (!addRoleResult.Succeeded)
+                {
+                    _logger.LogWarning("No se pudo asignar el nuevo rol {Role} al usuario {Id}", model.Role, user.Id);
+                }
+            }
+
+            // 5. Actualizar contraseña solo si se proporcionó una nueva (Detalle 3)
+            if (!string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                if (model.NewPassword.Length < 6)
+                    return (false, "La nueva contraseña debe tener al menos 6 caracteres.");
+
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var passResult = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
+                if (!passResult.Succeeded)
+                {
+                    var passError = passResult.Errors.FirstOrDefault()?.Description ?? "Error al actualizar la contraseña.";
+                    return (false, passError);
+                }
+            }
+
+            _logger.LogInformation("Empleado {FullName} ({UserName}) actualizado correctamente por admin {AdminId}.",
+                user.FullName, user.UserName, currentAdminId);
+
+            return (true, null);
+        }
+
+        // HU-18 CA-04: Desactivar o activar empleado
+        public async Task<(bool Success, string? ErrorMessage, bool NewStatus)> ToggleEmployeeStatusAsync(string id, string currentAdminId)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return (false, "Identificador no válido.", false);
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return (false, "El empleado no fue encontrado.", false);
+
+            // Detalle 5: El administrador no puede desactivarse a sí mismo
+            if (!string.IsNullOrEmpty(currentAdminId) && user.Id == currentAdminId)
+                return (false, "El administrador no puede desactivarse a sí mismo.", user.IsActive);
+
+            user.IsActive = !user.IsActive;
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return (false, "No se pudo cambiar el estado del empleado.", !user.IsActive);
+            }
+
+            _logger.LogInformation("Estado del empleado {UserName} cambiado a {Status} por admin {AdminId}",
+                user.UserName, user.IsActive ? "Activo" : "Inactivo", currentAdminId);
+
+            return (true, null, user.IsActive);
+        }
+
+        // HU-18 CA-05: Eliminar empleado (preservando pedidos históricos según Detalle 4)
+        public async Task<(bool Success, string? ErrorMessage)> DeleteEmployeeAsync(string id, string currentAdminId)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return (false, "Identificador no válido.");
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return (false, "El empleado no fue encontrado.");
+
+            // Detalle 5: El administrador no puede eliminarse a sí mismo
+            if (!string.IsNullOrEmpty(currentAdminId) && user.Id == currentAdminId)
+                return (false, "El administrador no puede eliminarse a sí mismo.");
+
+            // Detalle 4: Un empleado eliminado no afecta a los pedidos que registró.
+            // Si el usuario tiene pedidos donde figure como DeliveryDriverId o PreparedByUserId, desvincularlos si aplica.
+            // Si figura como ReceptionistId (requerido), deshabilitamos temporalmente o eliminamos directamente.
+            try
+            {
+                // Limpiar llaves foráneas opcionales si las hubiera
+                var driverOrders = await _context.Orders.Where(o => o.DeliveryDriverId == user.Id).ToListAsync();
+                foreach (var ord in driverOrders) ord.DeliveryDriverId = null;
+
+                var preparedOrders = await _context.Orders.Where(o => o.PreparedByUserId == user.Id).ToListAsync();
+                foreach (var ord in preparedOrders) ord.PreparedByUserId = null;
+
+                if (driverOrders.Any() || preparedOrders.Any())
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                // Si tiene pedidos como ReceptionistId (FK requerida en EF), reasignar a un usuario del sistema o eliminar usuario sin borrar pedidos
+                var receptionistOrders = await _context.Orders.Where(o => o.ReceptionistId == user.Id).ToListAsync();
+                if (receptionistOrders.Any())
+                {
+                    // Reasignar el ReceptionistId al admin actual para preservar íntegro el historial de pedidos
+                    if (!string.IsNullOrEmpty(currentAdminId))
+                    {
+                        foreach (var ro in receptionistOrders)
+                        {
+                            ro.ReceptionistId = currentAdminId;
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                var deleteResult = await _userManager.DeleteAsync(user);
+                if (!deleteResult.Succeeded)
+                {
+                    var error = deleteResult.Errors.FirstOrDefault()?.Description ?? "Error al eliminar el empleado.";
+                    _logger.LogError("Error al eliminar usuario {Id}: {Error}", user.Id, error);
+                    return (false, error);
+                }
+
+                _logger.LogInformation("Empleado {FullName} ({UserName}) eliminado por admin {AdminId}.",
+                    user.FullName, user.UserName, currentAdminId);
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Excepción al eliminar el colaborador {Id}", user.Id);
+                return (false, "No se pudo eliminar el empleado debido a un error del sistema.");
+            }
+        }
+
         public async Task<string> GenerateUniqueUserNameAsync(string fullName)
         {
             var baseUserName = BuildBaseUserName(fullName);

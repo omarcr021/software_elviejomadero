@@ -1,7 +1,8 @@
 @model software_elviejomadero.ViewModels.EmployeeListViewModel
-
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Gestión de Empleados";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
 <!-- Encabezado de Administración y Pestañas Segmentadas -->
@@ -24,7 +25,7 @@
         <div>
             <h2 class="h5 fw-bold text-madero-dark font-serif mb-1">Gestión de empleados</h2>
             <div class="text-muted small">
-                <span class="fw-semibold text-madero">@Model.TotalCount</span> colaboradores registrados
+                <span class="fw-semibold text-madero" id="totalEmployeesCount">@Model.TotalCount</span> colaboradores registrados
             </div>
         </div>
 
@@ -71,6 +72,7 @@
                 {
                     @foreach (var emp in Model.Employees)
                     {
+                        var isSelf = emp.Id == currentUserId;
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
@@ -78,7 +80,13 @@
                                         @emp.FullName.Substring(0, 1).ToUpper()
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-madero-dark">@emp.FullName</div>
+                                        <div class="fw-semibold text-madero-dark">
+                                            @emp.FullName
+                                            @if (isSelf)
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary ms-1 small">Tú</span>
+                                            }
+                                        </div>
                                         <div class="text-muted small">Registrado: @emp.CreatedAt.ToString("dd/MM/yyyy")</div>
                                     </div>
                                 </div>
@@ -118,14 +126,50 @@
                                 }
                             </td>
                             <td class="pe-4 text-end">
-                                <button type="button" class="btn btn-sm btn-light text-muted border-0 rounded-circle" 
-                                        title="Editar empleado" disabled>
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-light text-muted border-0 rounded-circle ms-1" 
-                                        title="Desactivar empleado" disabled>
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <!-- Botón Editar (CA-01) -->
+                                    <button type="button" class="btn btn-sm btn-light border-0 rounded-circle text-primary" 
+                                            title="Editar empleado"
+                                            onclick="openEditModal('@emp.Id')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <!-- Botón Activar / Desactivar (CA-04) -->
+                                    @if (isSelf)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light border-0 rounded-circle text-muted" 
+                                                title="No puedes desactivarte a ti mismo" disabled>
+                                            <i class="bi bi-toggle-on text-muted opacity-50"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ToggleStatus" asp-route-id="@emp.Id" method="post" class="d-inline m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-light border-0 rounded-circle @(emp.IsActive ? "text-warning" : "text-success")" 
+                                                    title="@(emp.IsActive ? "Desactivar empleado" : "Activar empleado")">
+                                                <i class="bi @(emp.IsActive ? "bi-slash-circle" : "bi-check-circle")"></i>
+                                            </button>
+                                        </form>
+                                    }
+
+                                    <!-- Botón Eliminar (CA-05) -->
+                                    @if (isSelf)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light border-0 rounded-circle text-muted" 
+                                                title="No puedes eliminarte a ti mismo" disabled>
+                                            <i class="bi bi-trash text-muted opacity-50"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light border-0 rounded-circle text-danger" 
+                                                title="Eliminar empleado"
+                                                onclick="openDeleteModal('@emp.Id', '@emp.FullName.Replace("'", "\\'")')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -135,7 +179,7 @@
     </div>
 </div>
 
-<!-- Modal: Nuevo Empleado -->
+<!-- Modal: Nuevo Empleado (HU-17) -->
 <div class="modal fade" id="newEmployeeModal" tabindex="-1" aria-labelledby="newEmployeeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -224,10 +268,127 @@
     </div>
 </div>
 
+<!-- Modal: Editar Empleado (HU-18 CA-01) -->
+<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-labelledby="editEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom px-4 pt-4 pb-3">
+                <div>
+                    <h5 class="modal-title fw-bold text-madero-dark font-serif" id="editEmployeeModalLabel">Editar empleado</h5>
+                    <p class="text-muted small mb-0">Actualiza los datos, rol o credenciales del colaborador.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form asp-controller="Employee" asp-action="Edit" method="post" id="editEmployeeForm" autocomplete="off">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="editId" name="Id" value="" />
+
+                <div class="modal-body px-4 py-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Nombre completo</label>
+                        <input name="FullName" id="editFullName" class="form-control" placeholder="Ej: Juan Pérez García" required />
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-secondary">DNI</label>
+                            <input name="DNI" id="editDNI" class="form-control" maxlength="8" placeholder="8 dígitos" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-secondary">Teléfono</label>
+                            <input name="Phone" id="editPhone" class="form-control" maxlength="9" placeholder="9 dígitos" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Nombre de usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted">@@</span>
+                            <input id="editUserName" class="form-control bg-light font-monospace" readonly />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Rol</label>
+                        <select name="Role" id="editRole" class="form-select" required>
+                            <option value="">Seleccione un rol...</option>
+                            @foreach (var role in Model.AvailableRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Nueva contraseña (opcional)</label>
+                        <div class="input-group">
+                            <input name="NewPassword" type="password" class="form-control" id="editPassInput" placeholder="Dejar en blanco para mantener la actual" />
+                            <button class="btn btn-outline-secondary" type="button" id="toggleEditPassBtn">
+                                <i class="bi bi-eye" id="editPassIcon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text small text-muted">Solo ingrésala si deseas cambiarla (mínimo 6 caracteres).</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-2">
+                        <input name="IsActive" value="true" class="form-check-input" type="checkbox" id="editIsActiveSwitch" />
+                        <label class="form-check-label small fw-medium text-secondary" for="editIsActiveSwitch">
+                            Empleado activo (habilitado para iniciar sesión)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-madero rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar empleado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Eliminación (HU-18 CA-05) -->
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom px-4 pt-4 pb-3">
+                <h5 class="modal-title fw-bold text-danger font-serif" id="deleteEmployeeModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Eliminar empleado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <p class="mb-3 text-secondary">
+                    ¿Estás seguro de que deseas eliminar permanentemente a <strong class="text-madero-dark" id="deleteEmployeeName"></strong>?
+                </p>
+                <div class="alert alert-warning small mb-0 py-2">
+                    <i class="bi bi-info-circle me-1"></i> Esta acción retirará al colaborador del sistema y ya no podrá iniciar sesión. Los pedidos registrados históricamente se mantendrán intactos.
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form id="deleteEmployeeForm" method="post" action="">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-trash me-1"></i> Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Generación dinámica y automática del nombre de usuario
+        // Generación dinámica y automática del nombre de usuario (Nuevo empleado)
         let debounceTimer;
         const fullNameInput = document.getElementById('fullNameInput');
         const generatedUserInput = document.getElementById('generatedUserNameInput');
@@ -254,13 +415,13 @@
             }, 300);
         });
 
-        // Limpiar formulario al cancelar
+        // Limpiar formulario al cancelar nuevo empleado
         cancelBtn?.addEventListener('click', function () {
             form.reset();
             generatedUserInput.value = '';
         });
 
-        // Toggle ver contraseña inicial
+        // Toggle ver contraseña inicial (Nuevo empleado)
         document.getElementById('toggleEmpPassBtn')?.addEventListener('click', function () {
             const passInput = document.getElementById('initialPassInput');
             const icon = document.getElementById('empPassIcon');
@@ -274,5 +435,54 @@
                 icon.classList.add('bi-eye');
             }
         });
+
+        // Toggle ver contraseña (Editar empleado)
+        document.getElementById('toggleEditPassBtn')?.addEventListener('click', function () {
+            const passInput = document.getElementById('editPassInput');
+            const icon = document.getElementById('editPassIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+
+        // Abrir y cargar datos en modal de edición (HU-18 CA-01)
+        function openEditModal(empId) {
+            fetch(`/Employee/GetForEdit?id=${encodeURIComponent(empId)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("No se pudo obtener el colaborador.");
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById('editId').value = data.id;
+                    document.getElementById('editFullName').value = data.fullName;
+                    document.getElementById('editDNI').value = data.dni;
+                    document.getElementById('editPhone').value = data.phone;
+                    document.getElementById('editUserName').value = data.userName;
+                    document.getElementById('editRole').value = data.role;
+                    document.getElementById('editPassInput').value = '';
+                    document.getElementById('editIsActiveSwitch').checked = data.isActive;
+
+                    const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+                    modal.show();
+                })
+                .catch(err => {
+                    alert("Error al cargar datos del empleado.");
+                    console.error(err);
+                });
+        }
+
+        // Abrir modal de confirmación de eliminación (HU-18 CA-05)
+        function openDeleteModal(empId, fullName) {
+            document.getElementById('deleteEmployeeName').textContent = fullName;
+            document.getElementById('deleteEmployeeForm').action = `/Employee/Delete/${encodeURIComponent(empId)}`;
+            const modal = new bootstrap.Modal(document.getElementById('deleteEmployeeModal'));
+            modal.show();
+        }
     </script>
 }

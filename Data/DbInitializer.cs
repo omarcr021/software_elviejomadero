@@ -55,12 +55,35 @@ namespace software_elviejomadero.Data
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
             ");
 
-            // HU-07: asegurar columna IsBilled en RestaurantTables
+            // HU-07: asegurar columna IsBilled en RestaurantTables de forma limpia
             try
             {
-                await context.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""RestaurantTables"" ADD COLUMN ""IsBilled"" INTEGER NOT NULL DEFAULT 0;");
+                var conn = context.Database.GetDbConnection();
+                var wasOpen = conn.State == System.Data.ConnectionState.Open;
+                if (!wasOpen) await conn.OpenAsync();
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "PRAGMA table_info('RestaurantTables');";
+                var hasIsBilled = false;
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        if (reader.GetString(1).Equals("IsBilled", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasIsBilled = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasIsBilled)
+                {
+                    using var alterCmd = conn.CreateCommand();
+                    alterCmd.CommandText = @"ALTER TABLE ""RestaurantTables"" ADD COLUMN ""IsBilled"" INTEGER NOT NULL DEFAULT 0;";
+                    await alterCmd.ExecuteNonQueryAsync();
+                }
+                if (!wasOpen) await conn.CloseAsync();
             }
-            catch { /* Columna ya existente */ }
+            catch { /* Columna ya existente o gestionada por migraciones */ }
 
             // HU-02/HU-03: el salón tiene 12 mesas (M1..M12). Solo se crean las que falten.
             var existingTables = await context.RestaurantTables.Select(t => t.Number).ToListAsync();
