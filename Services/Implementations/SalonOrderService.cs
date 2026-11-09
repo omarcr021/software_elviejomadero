@@ -17,13 +17,26 @@ namespace software_elviejomadero.Services.Implementations
             _orders = orders;
         }
 
-        public async Task<List<RestaurantTable>> GetTablesAsync()
+        // HU-04: filtrado de mesas por estado (Todas, Ocupadas, Libres).
+        public async Task<List<RestaurantTable>> GetTablesAsync(string? statusFilter = null)
         {
-            var tables = await _context.RestaurantTables
+            var query = _context.RestaurantTables
                 .AsNoTracking()
-                .Where(t => t.IsActive)
-                .ToListAsync();
+                .Where(t => t.IsActive);
 
+            if (!string.IsNullOrWhiteSpace(statusFilter) && !statusFilter.Equals("Todas", StringComparison.OrdinalIgnoreCase))
+            {
+                if (statusFilter.Equals("Libres", StringComparison.OrdinalIgnoreCase) || statusFilter.Equals("Libre", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(t => t.Status == TableStatuses.Free);
+                }
+                else if (statusFilter.Equals("Ocupadas", StringComparison.OrdinalIgnoreCase) || statusFilter.Equals("Ocupada", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(t => t.Status == TableStatuses.Occupied);
+                }
+            }
+
+            var tables = await query.ToListAsync();
             return tables.OrderBy(t => ExtractTableNumber(t.Number)).ThenBy(t => t.Id).ToList();
         }
 
@@ -190,15 +203,30 @@ namespace software_elviejomadero.Services.Implementations
 
         public async Task<List<ReadyToServeViewModel>> GetReadyToServeAsync()
         {
-            // El salón usa el estado "Listo para despacho" cuando cocina termina el pedido (HU-09).
-            var orders = await _context.Orders.AsNoTracking().Include(o => o.Table)
+            // HU-08: Pedidos de salón en estado "Listo para despacho", ordenados por tiempo de espera (más antiguo primero).
+            var orders = await _context.Orders.AsNoTracking()
+                .Include(o => o.Table)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Dish)
                 .Where(o => o.OrderType == OrderTypes.DineIn && o.Status == OrderStatuses.ReadyForDispatch)
-                .OrderBy(o => o.ReadyAt ?? o.CreatedAt).ToListAsync();
+                .OrderBy(o => o.ReadyAt ?? o.CreatedAt)
+                .ThenBy(o => o.Id)
+                .ToListAsync();
+
             return orders.Select(o => new ReadyToServeViewModel
             {
-                OrderId = o.Id, Code = o.OrderCode, CustomerName = o.CustomerName,
+                OrderId = o.Id,
+                Code = o.OrderCode,
+                TableId = o.TableId,
                 TableLabel = TableLabels.Format(o.Table?.Number ?? string.Empty),
-                ItemsCount = o.TotalItemsCount
+                CustomerName = o.CustomerName,
+                ItemsCount = o.TotalItemsCount,
+                ReadyAtUtc = o.ReadyAt ?? o.CreatedAt,
+                Items = o.Items.OrderBy(i => i.Id).Select(i => new ReadyToServeItemViewModel
+                {
+                    Quantity = i.Quantity,
+                    DishName = !string.IsNullOrWhiteSpace(i.DishName) ? i.DishName : (i.Dish != null ? i.Dish.Name : string.Empty)
+                }).ToList()
             }).ToList();
         }
 

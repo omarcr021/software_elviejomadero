@@ -148,6 +148,31 @@
         gap: .3rem;
     }
 
+    /* HU-11: Alerta visual de retraso en columna Nuevos (>= 20 min) */
+    .kc-card.kc-card-delayed {
+        border-color: #f1b0a7;
+        box-shadow: 0 2px 8px rgba(180, 40, 20, .08);
+    }
+
+    .kc-time.is-delayed {
+        color: #c0392b;
+        font-weight: 600;
+    }
+    .kc-time.is-delayed i {
+        color: #c0392b;
+    }
+
+    .kc-delay-alert {
+        background: #fdedeb;
+        color: #c0392b;
+        border-radius: 8px;
+        padding: .5rem .75rem;
+        font-size: .82rem;
+        font-weight: 500;
+        margin-bottom: .7rem;
+        line-height: 1.35;
+    }
+
     .kc-origin {
         display: flex;
         justify-content: space-between;
@@ -338,8 +363,37 @@
 
             function tick() {
                 const now = Date.now() + serverOffset;
-                board.querySelectorAll('[data-created-ms]').forEach(function (el) {
-                    el.textContent = formatElapsed(now - Number(el.dataset.createdMs));
+                board.querySelectorAll('.kc-card').forEach(function (card) {
+                    const timeEl = card.querySelector('[data-created-ms]');
+                    if (!timeEl) return;
+                    const createdMs = Number(timeEl.dataset.createdMs);
+                    const elapsedMs = Math.max(0, now - createdMs);
+                    const totalMinutes = Math.floor(elapsedMs / 60000);
+
+                    // HU-11: La alerta solo se aplica a pedidos en la columna "Nuevos"
+                    const status = card.dataset.status;
+                    const isNew = status === 'Nuevo' || Boolean(card.closest('[aria-label="Nuevos"]'));
+
+                    const timeContainer = card.querySelector('.kc-time');
+                    const alertBox = card.querySelector('[data-delay-alert]');
+
+                    if (isNew && totalMinutes >= 20) {
+                        card.classList.add('kc-card-delayed');
+                        if (timeContainer) timeContainer.classList.add('is-delayed');
+                        timeEl.textContent = 'Demora: ' + totalMinutes + ' min';
+                        if (alertBox) {
+                            alertBox.classList.remove('d-none');
+                            alertBox.style.display = 'block';
+                        }
+                    } else {
+                        card.classList.remove('kc-card-delayed');
+                        if (timeContainer) timeContainer.classList.remove('is-delayed');
+                        timeEl.textContent = formatElapsed(elapsedMs);
+                        if (alertBox) {
+                            alertBox.classList.add('d-none');
+                            alertBox.style.display = 'none';
+                        }
+                    }
                 });
             }
 

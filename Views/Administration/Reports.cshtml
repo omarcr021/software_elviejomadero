@@ -1,0 +1,233 @@
+@model software_elviejomadero.ViewModels.ReportViewModel
+@{
+    ViewData["Title"] = "Reportes";
+    var dateVal = Model.Filter.Date?.ToString("yyyy-MM-dd") ?? "";
+}
+
+<div class="vm-admin-wrapper">
+    <!-- Encabezado de Administración y Pestañas Segmentadas -->
+    <div class="vm-admin-header">
+        <div>
+            <h1 class="vm-page-title">Administración</h1>
+            <p class="vm-page-subtitle">Operación, carta, empleados y resultados de El Viejo Madero.</p>
+        </div>
+
+        <div class="vm-segmented-tabs">
+            <a class="vm-seg-tab" asp-controller="Administration" asp-action="Index">Panel</a>
+            <a class="vm-seg-tab" asp-controller="Dish" asp-action="Index">Carta</a>
+            <a class="vm-seg-tab" asp-controller="Employee" asp-action="Index">Empleados</a>
+            <a class="vm-seg-tab active" asp-controller="Administration" asp-action="Reports">Reportes</a>
+        </div>
+    </div>
+
+    <!-- Título de la sección con ícono de gráfico (idéntico al prototipo) -->
+    <div class="vm-report-title-section mb-4">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <svg class="vm-report-chart-svg" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cf6b29" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <h2 class="vm-report-heading">Reporte de ventas y pedidos</h2>
+        </div>
+        <p class="vm-report-subheading">Consulta el desempeño registrado en el prototipo.</p>
+    </div>
+
+    <!-- Indicadores KPI Superiores (CA-01) -->
+    <div class="vm-report-kpis-grid mb-4">
+        <!-- 1. Pedidos filtrados -->
+        <div class="vm-kpi-card">
+            <div class="vm-kpi-icon is-gray">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <path d="m9 16 2 2 4-4"/>
+                </svg>
+            </div>
+            <div class="vm-kpi-body">
+                <span class="vm-kpi-label">Pedidos filtrados</span>
+                <strong class="vm-kpi-value">@Model.FilteredOrdersCount</strong>
+            </div>
+        </div>
+
+        <!-- 2. Ventas -->
+        <div class="vm-kpi-card">
+            <div class="vm-kpi-icon is-orange">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+            </div>
+            <div class="vm-kpi-body">
+                <span class="vm-kpi-label">Ventas</span>
+                <strong class="vm-kpi-value">S/ @Model.TotalSales.ToString("N2")</strong>
+            </div>
+        </div>
+
+        <!-- 3. Ticket promedio -->
+        <div class="vm-kpi-card">
+            <div class="vm-kpi-icon is-gray">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="vm-kpi-body">
+                <span class="vm-kpi-label">Ticket promedio</span>
+                <strong class="vm-kpi-value">S/ @Model.AverageTicket.ToString("N2")</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros (CA-03): Dropdowns con estilo exacto al prototipo -->
+    <form method="get" asp-action="Reports" class="vm-report-filters-bar mb-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <select name="status" class="form-select form-select-sm vm-report-select" onchange="this.form.submit()">
+                @foreach (var st in Model.AvailableStatuses)
+                {
+                    <option value="@st" selected="@(string.Equals(Model.Filter.Status, st, StringComparison.OrdinalIgnoreCase) || (string.IsNullOrWhiteSpace(Model.Filter.Status) && st == "Todos los estados"))">
+                        @st
+                    </option>
+                }
+            </select>
+
+            <select name="orderType" class="form-select form-select-sm vm-report-select" onchange="this.form.submit()">
+                @foreach (var tp in Model.AvailableTypes)
+                {
+                    <option value="@tp" selected="@(string.Equals(Model.Filter.OrderType, tp, StringComparison.OrdinalIgnoreCase) || (string.IsNullOrWhiteSpace(Model.Filter.OrderType) && tp == "Todos los tipos"))">
+                        @tp
+                    </option>
+                }
+            </select>
+
+            <input type="date" name="date" class="form-control form-control-sm vm-report-select vm-report-date-input" value="@dateVal" onchange="this.form.submit()" title="Filtrar por fecha" />
+
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.Status) && Model.Filter.Status != "Todos los estados" ||
+                 !string.IsNullOrWhiteSpace(Model.Filter.OrderType) && Model.Filter.OrderType != "Todos los tipos" ||
+                 Model.Filter.Date.HasValue)
+            {
+                <a asp-action="Reports" class="btn btn-sm btn-link text-muted text-decoration-none px-2" title="Limpiar filtros">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                </a>
+            }
+        </div>
+    </form>
+
+    <!-- Contenido Principal: Tabla a la Izquierda y Desgloses a la Derecha -->
+    <div class="row g-3">
+        <!-- Tabla de pedidos (CA-01) -->
+        <div class="col-lg-8">
+            <div class="vm-report-table-card">
+                <div class="table-responsive">
+                    <table class="table vm-report-table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>CÓDIGO</th>
+                                <th>TIPO</th>
+                                <th>CLIENTE</th>
+                                <th>ESTADO</th>
+                                <th>PAGO</th>
+                                <th class="text-end">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Orders.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No se encontraron pedidos con los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var order in Model.Orders)
+                                {
+                                    <tr>
+                                        <td class="vm-order-code">@order.Code</td>
+                                        <td class="vm-order-type">@order.TypeDisplay</td>
+                                        <td class="vm-order-customer">@order.CustomerName</td>
+                                        <td>
+                                            <span class="vm-status-pill status-@order.StatusDisplay.ToLower().Replace(" ", "-")">
+                                                @order.StatusDisplay
+                                            </span>
+                                        </td>
+                                        <td class="vm-order-payment">@order.PaymentMethodDisplay</td>
+                                        <td class="text-end vm-order-total">S/ @order.TotalAmount.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secciones de Desglose de Ventas (CA-02) -->
+        <div class="col-lg-4 d-flex flex-column gap-3">
+            <!-- Ventas por pago (Fiel al prototipo) -->
+            <div class="vm-breakdown-card">
+                <h3 class="vm-breakdown-title">Ventas por pago</h3>
+                <div class="vm-breakdown-content">
+                    <div class="vm-breakdown-row">
+                        <span class="vm-breakdown-name">Yape</span>
+                        <strong class="vm-breakdown-val">S/ @Model.SalesByPaymentMethod.Yape.ToString("N2")</strong>
+                    </div>
+                    <div class="vm-breakdown-divider"></div>
+                    <div class="vm-breakdown-row">
+                        <span class="vm-breakdown-name">Plin</span>
+                        <strong class="vm-breakdown-val">S/ @Model.SalesByPaymentMethod.Plin.ToString("N2")</strong>
+                    </div>
+                    <div class="vm-breakdown-divider"></div>
+                    <div class="vm-breakdown-row">
+                        <span class="vm-breakdown-name">Efectivo</span>
+                        <strong class="vm-breakdown-val">S/ @Model.SalesByPaymentMethod.Cash.ToString("N2")</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas por tipo de pedido (CA-02) -->
+            <div class="vm-breakdown-card">
+                <h3 class="vm-breakdown-title">Ventas por tipo de pedido</h3>
+                <div class="vm-breakdown-content">
+                    @for (int i = 0; i < Model.SalesByOrderType.Count; i++)
+                    {
+                        var typeItem = Model.SalesByOrderType[i];
+                        if (i > 0)
+                        {
+                            <div class="vm-breakdown-divider"></div>
+                        }
+                        <div class="vm-breakdown-row">
+                            <div>
+                                <span class="vm-breakdown-name d-block">@typeItem.OrderType</span>
+                                <span class="vm-breakdown-count">@typeItem.OrdersCount @(typeItem.OrdersCount == 1 ? "pedido" : "pedidos")</span>
+                            </div>
+                            <strong class="vm-breakdown-val">S/ @typeItem.TotalSales.ToString("N2")</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HU-20: Botón Exportar Reporte en PDF (idéntico al prototipo) -->
+    <div class="d-flex justify-content-end mt-3 mb-4">
+        <a asp-action="ExportPdf"
+           asp-route-status="@Model.Filter.Status"
+           asp-route-orderType="@Model.Filter.OrderType"
+           asp-route-date="@dateVal"
+           class="btn vm-btn-export-pdf"
+           title="Exportar reporte en formato PDF">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exportar reporte
+        </a>
+    </div>
+</div>

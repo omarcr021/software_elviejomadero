@@ -10,6 +10,8 @@ namespace software_elviejomadero.ViewModels
         public List<ReadyToServeViewModel> ReadyToServe { get; set; } = new();
         // HU-05: se utiliza junto con las mesas existentes de HU-02.
         public List<SalonTableAttentionViewModel> Attention { get; set; } = new();
+        // HU-04: filtro activo de mesas (Todas, Ocupadas, Libres).
+        public string CurrentFilter { get; set; } = "Todas";
     }
 
     // HU-05: el inicio corresponde al envío a cocina (CreatedAt del pedido de salón).
@@ -37,9 +39,18 @@ namespace software_elviejomadero.ViewModels
     {
         public int OrderId { get; set; }
         public string Code { get; set; } = string.Empty;
+        public int? TableId { get; set; }
         public string TableLabel { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public int ItemsCount { get; set; }
+        public DateTime? ReadyAtUtc { get; set; }
+        public List<ReadyToServeItemViewModel> Items { get; set; } = new();
+    }
+
+    public class ReadyToServeItemViewModel
+    {
+        public int Quantity { get; set; }
+        public string DishName { get; set; } = string.Empty;
     }
 
     // HU-07: pedido individual dentro del consumo de la mesa.

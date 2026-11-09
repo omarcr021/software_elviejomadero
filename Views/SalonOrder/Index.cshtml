@@ -38,6 +38,51 @@
     const POLL_MS = 4000;
     let lastHtml = board.innerHTML.trim();
     let busy = false;
+    // HU-04: Filtro activo por defecto es "Todas" (Detalle 2)
+    let currentFilter = '@(Model.CurrentFilter ?? "Todas")';
+
+    // HU-04: Aplicar filtro sobre las tarjetas de mesas en el DOM
+    function applyFilter(filter) {
+        currentFilter = filter;
+        const grid = document.getElementById('tablesGrid');
+        if (!grid) return;
+        const tables = grid.querySelectorAll('.vm-mozo-table');
+        let visibleCount = 0;
+
+        tables.forEach(table => {
+            const status = table.dataset.tableStatus || (table.classList.contains('is-free') ? 'Libre' : 'Ocupada');
+            let show = false;
+            if (filter === 'Todas') {
+                show = true;
+            } else if (filter === 'Ocupadas' && status.toLowerCase() === 'ocupada') {
+                show = true;
+            } else if (filter === 'Libres' && status.toLowerCase() === 'libre') {
+                show = true;
+            }
+
+            table.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        // Actualizar estado activo en los botones de filtro
+        document.querySelectorAll('.vm-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+
+        // Mensaje cuando ninguna mesa coincide
+        const emptyMsg = document.getElementById('noFilteredTablesMsg');
+        if (emptyMsg) {
+            emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+
+    // HU-04: Escuchar clics en los botones de filtro
+    board.addEventListener('click', e => {
+        const filterBtn = e.target.closest('[data-filter]');
+        if (!filterBtn) return;
+        const filter = filterBtn.dataset.filter;
+        applyFilter(filter);
+    });
 
     // HU-05: no se actualiza el tiempo en el servidor cada segundo.
     // Se calcula en el navegador desde la hora UTC en que el pedido se envió a cocina.
@@ -53,8 +98,74 @@
             if (label.textContent !== next) label.textContent = next;
         });
     }
+
+    // HU-08 CA-01: Calcula y actualiza el tiempo transcurrido "hace X min" para pedidos listos
+    function updateReadyElapsedTimes() {
+        const now = Date.now();
+        board.querySelectorAll('[data-ready-time]').forEach(el => {
+            const timeStr = el.dataset.readyTime;
+            if (!timeStr) return;
+            const readyAt = Date.parse(timeStr);
+            if (!Number.isFinite(readyAt)) return;
+            const diffMin = Math.max(0, Math.floor((now - readyAt) / 60000));
+            const textEl = el.querySelector('.vm-ready-time-text');
+            if (textEl) {
+                textEl.textContent = diffMin <= 0 ? 'hace poco' : `hace ${diffMin} min`;
+            }
+        });
+    }
+
     updateElapsedMinutes();
-    setInterval(updateElapsedMinutes, 15000);
+    updateReadyElapsedTimes();
+    setInterval(() => {
+        updateElapsedMinutes();
+        updateReadyElapsedTimes();
+    }, 15000);
+
+    // HU-08 CA-03: Servir a la mesa directamente desde la tarjeta de pedidos listos
+    board.addEventListener('submit', async e => {
+        const form = e.target.closest('.vm-ready-serve-form');
+        if (!form) return;
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+            const formData = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            if (res.ok) {
+                const json = await res.json();
+                if (json.succeeded) {
+                    const card = form.closest('.vm-mozo-ready-card');
+                    if (card) {
+                        card.remove();
+                        const countBadge = document.getElementById('readyOrdersCount');
+                        if (countBadge) {
+                            const currentCount = parseInt(countBadge.textContent, 10) || 0;
+                            countBadge.textContent = Math.max(0, currentCount - 1);
+                        }
+                        const container = document.querySelector('.vm-mozo-ready-cards');
+                        if (container && container.children.length === 0) {
+                            container.outerHTML = '<div class="vm-mozo-empty">No hay platos listos en cocina por ahora.</div>';
+                        }
+                    }
+                    refresh();
+                } else {
+                    alert(json.errorMessage || 'No se pudo marcar el pedido como servido.');
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            } else {
+                alert('No se pudo marcar el pedido como servido.');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        } catch {
+            alert('Error al comunicar con el servidor.');
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
 
     // Tocar una mesa -> pide su detalle actualizado al servidor.
     board.addEventListener('click', async e => {
@@ -151,11 +262,13 @@
     });
 
     // Actualización automática: refleja lo que otros mozos ocupan o liberan, sin recargar la página.
+    // HU-04 Detalle 4: Re-aplica el filtro activo cuando el tablero se actualiza
     async function refresh() {
         if (busy || document.hidden) return;
         busy = true;
         try {
-            const res = await fetch(board.dataset.boardUrl,
+            const url = `${board.dataset.boardUrl}?filter=${encodeURIComponent(currentFilter)}`;
+            const res = await fetch(url,
                 { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin', cache: 'no-store' });
             if (res.ok && !res.redirected) {
                 const html = (await res.text()).trim();
@@ -163,6 +276,8 @@
                     board.innerHTML = html;
                     lastHtml = html;
                     updateElapsedMinutes();
+                    updateReadyElapsedTimes();
+                    applyFilter(currentFilter);
                 }
             }
         } catch { /* sin red: se reintenta en el próximo ciclo */ }
@@ -170,6 +285,9 @@
     }
     setInterval(refresh, POLL_MS);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+
+    // Inicializar filtro por defecto al cargar
+    applyFilter(currentFilter);
 })();
 </script>
 }

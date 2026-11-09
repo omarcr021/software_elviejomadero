@@ -61,6 +61,8 @@ builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IOrderServ
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.ISalonOrderService, software_elviejomadero.Services.Implementations.SalonOrderService>();
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IDeliveryRouteService, software_elviejomadero.Services.Implementations.DeliveryRouteService>();
 builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IKitchenService, software_elviejomadero.Services.Implementations.KitchenService>();
+builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IReportService, software_elviejomadero.Services.Implementations.ReportService>();
+builder.Services.AddScoped<software_elviejomadero.Services.Interfaces.IPdfReportGenerator, software_elviejomadero.Services.Implementations.PdfReportGenerator>();
 
 // 5. Registrar MVC con Vistas y ForwardedHeaders para Reverse Proxy (Render)
 builder.Services.AddControllersWithViews();

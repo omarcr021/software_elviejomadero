@@ -72,8 +72,44 @@
     padding: 0.05rem 0.55rem;
 }
 
+/* HU-04: Grupo de filtros de mesas (Todas, Ocupadas, Libres) */
+.vm-mozo-filter-group {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #ded5c9;
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.vm-filter-btn {
+    border: none;
+    background: transparent;
+    color: #634d3f;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.35rem 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    line-height: 1.2;
+    outline: none;
+}
+
+.vm-filter-btn:hover:not(.active) {
+    color: #24160e;
+    background: #f7f2ea;
+}
+
+.vm-filter-btn.active {
+    background: #482e1d;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(40, 22, 14, 0.2);
+}
+
 .vm-mozo-btn-takeout {
-    margin-left: auto;
+    margin-left: 0.5rem;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -103,29 +139,93 @@
     margin-top: 0.65rem;
 }
 
-.vm-mozo-ready-list {
+/* HU-08: Tarjetas de pedidos listos para entregar */
+.vm-mozo-ready-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.vm-mozo-ready-card {
+    background: #ffffff;
+    border: 1px solid #e8dec8;
+    border-radius: 14px;
+    padding: 1.15rem 1.25rem;
+    box-shadow: 0 2px 8px rgba(40, 22, 14, 0.04);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.65rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.vm-mozo-ready-item {
+.vm-ready-card-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-    background: #ffffff;
-    border: 1px solid var(--mz-line);
-    border-left: 3px solid #3b8a55;
-    border-radius: 10px;
-    padding: 0.65rem 0.95rem;
-    font-size: 0.85rem;
+    margin-bottom: 0.45rem;
 }
 
-.vm-mozo-ready-qty {
-    margin-left: auto;
-    color: var(--mz-muted);
+.vm-ready-order-code {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #24160e;
+}
+
+.vm-ready-elapsed-time {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.82rem;
+    color: #7b6d61;
+    font-variant-numeric: tabular-nums;
+}
+
+.vm-ready-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    color: #554437;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f2e9dc;
+}
+
+.vm-ready-table-pill {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    color: #482e1d;
+}
+
+.vm-ready-customer-name {
+    font-weight: 500;
+    color: #6a594d;
+}
+
+.vm-ready-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.95rem;
+}
+
+.vm-ready-item-row {
+    display: flex;
+    align-items: baseline;
+    font-size: 0.88rem;
+    color: #382416;
+}
+
+.vm-ready-item-qty {
+    font-weight: 700;
+    color: #cf6b29;
+    margin-right: 0.5rem;
+    min-width: 1.4rem;
+}
+
+.vm-ready-item-name {
+    font-weight: 500;
 }
 
 .vm-mozo-hint {

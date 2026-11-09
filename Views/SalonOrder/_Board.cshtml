@@ -2,15 +2,12 @@
 @using software_elviejomadero.Models
 @using software_elviejomadero.ViewModels
 @using System.Globalization
-@{
-    var attentionByTable = Model.Attention.ToDictionary(a => a.TableId);
-}
 
 <section class="vm-mozo-section" aria-labelledby="readyTitle">
     <div class="vm-mozo-section-head">
         <span class="vm-mozo-section-icon is-ready"><i class="bi bi-bell"></i></span>
         <h2 class="vm-mozo-section-title" id="readyTitle">Listos para entregar</h2>
-        <span class="vm-mozo-count">@Model.ReadyToServe.Count</span>
+        <span class="vm-mozo-count" id="readyOrdersCount">@Model.ReadyToServe.Count</span>
     </div>
     @if (!Model.ReadyToServe.Any())
     {
@@ -18,13 +15,48 @@
     }
     else
     {
-        <div class="vm-mozo-ready-list">
+        <div class="vm-mozo-ready-cards">
             @foreach (var ready in Model.ReadyToServe)
             {
-                <div class="vm-mozo-ready-item">
-                    <strong>@ready.TableLabel</strong>
-                    <span>@ready.Code · @ready.CustomerName</span>
-                    <span class="vm-mozo-ready-qty">@ready.ItemsCount platos</span>
+                var readyIso = ready.ReadyAtUtc?.ToString("o", CultureInfo.InvariantCulture) ?? "";
+                <div class="vm-mozo-ready-card" data-ready-order-id="@ready.OrderId">
+                    <div class="vm-ready-card-header">
+                        <strong class="vm-ready-order-code">@ready.Code</strong>
+                        <span class="vm-ready-elapsed-time" data-ready-time="@readyIso">
+                            <i class="bi bi-clock me-1"></i><span class="vm-ready-time-text">hace poco</span>
+                        </span>
+                    </div>
+
+                    <div class="vm-ready-meta-row">
+                        <span class="vm-ready-table-pill">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+                                <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/>
+                                <path d="M5 18v2"/>
+                                <path d="M19 18v2"/>
+                            </svg>
+                            @ready.TableLabel
+                        </span>
+                        <span class="vm-ready-customer-name">@ready.CustomerName</span>
+                    </div>
+
+                    <div class="vm-ready-items-list">
+                        @foreach (var item in ready.Items)
+                        {
+                            <div class="vm-ready-item-row">
+                                <strong class="vm-ready-item-qty">@item.Quantity&times;</strong>
+                                <span class="vm-ready-item-name">@item.DishName</span>
+                            </div>
+                        }
+                    </div>
+
+                    <form class="vm-ready-serve-form mt-2" asp-controller="SalonOrder" asp-action="ServeOrder" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="orderId" value="@ready.OrderId" />
+                        <button type="submit" class="vm-btn-serve">
+                            <i class="bi bi-bell me-1"></i> Servir a la mesa
+                        </button>
+                    </form>
                 </div>
             }
         </div>
@@ -42,25 +74,23 @@
             </svg>
         </span>
         <h2 class="vm-mozo-section-title" id="tablesTitle">Mesas del salón</h2>
-        <button type="button" class="vm-mozo-btn-takeout" disabled title="Disponible en una próxima historia de usuario">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                <path d="M3 6h18"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-            Pedido para llevar
-        </button>
+
+        <!-- HU-04: Filtro de mesas por estado (Todas, Ocupadas, Libres) -->
+        <div class="vm-mozo-filter-group ms-auto" role="group" aria-label="Filtrar mesas">
+            <button type="button" class="vm-filter-btn @(Model.CurrentFilter == "Todas" ? "active" : "")" data-filter="Todas">Todas</button>
+            <button type="button" class="vm-filter-btn @(Model.CurrentFilter == "Ocupadas" ? "active" : "")" data-filter="Ocupadas">Ocupadas</button>
+            <button type="button" class="vm-filter-btn @(Model.CurrentFilter == "Libres" ? "active" : "")" data-filter="Libres">Libres</button>
+        </div>
     </div>
     <p class="vm-mozo-hint">Toca una mesa libre para tomar un pedido, o una ocupada para ver su consumo.</p>
 
-    <div class="vm-mozo-grid">
+    <div class="vm-mozo-grid" id="tablesGrid">
         @foreach (var table in Model.Tables)
         {
             var free = table.Status == TableStatuses.Free;
-            attentionByTable.TryGetValue(table.Id, out var attention);
-            var hasEstimate = !free && attention?.EstimatedServiceMinutes != null;
-            var startedAt = attention?.SentToKitchenAtUtc.ToString("O", CultureInfo.InvariantCulture) ?? "";
-            <button type="button" class="vm-mozo-table @(free ? "is-free" : "is-occupied")" data-table-id="@table.Id"
+            <button type="button" class="vm-mozo-table @(free ? "is-free" : "is-occupied")" 
+                    data-table-id="@table.Id"
+                    data-table-status="@table.Status"
                     aria-label="@TableLabels.Format(table.Number), @table.Status">
                 <svg xmlns="http://www.w3.org/2000/svg" class="vm-mozo-table-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
@@ -70,26 +100,10 @@
                 </svg>
                 <span class="vm-mozo-table-name">@TableLabels.Format(table.Number)</span>
                 <span class="vm-mozo-state @(free ? "is-free" : "is-occupied")">@table.Status</span>
-                @if (!free && attention != null)
-                {
-                    <span class="vm-hu05-metrics">
-                        @if (hasEstimate)
-                        {
-                            <span class="vm-hu05-time" data-hu05-start="@startedAt"
-                                  data-hu05-estimate="@(attention.EstimatedServiceMinutes.Value)"
-                                  aria-label="Tiempo transcurrido y estimado">
-                                <i class="bi bi-clock" aria-hidden="true"></i>
-                                <span data-hu05-minutes>0/@attention.EstimatedServiceMinutes min</span>
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="vm-hu05-pending">Estimación no disponible</span>
-                        }
-                        <strong class="vm-hu05-total">S/ @attention.TotalConsumption.ToString("F2", CultureInfo.InvariantCulture)</strong>
-                    </span>
-                }
             </button>
         }
+    </div>
+    <div id="noFilteredTablesMsg" class="vm-mozo-empty" style="display:none;">
+        No hay mesas con el estado seleccionado en este momento.
     </div>
 </section>

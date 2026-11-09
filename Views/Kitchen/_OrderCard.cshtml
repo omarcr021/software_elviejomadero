@@ -1,13 +1,18 @@
 @using software_elviejomadero.Models
 @model software_elviejomadero.ViewModels.KitchenOrderViewModel
 
-<article class="kc-card" data-order-id="@Model.Id">
+<article class="kc-card @(Model.IsDelayed ? "kc-card-delayed" : "")" data-order-id="@Model.Id" data-status="@Model.Status">
     <div class="kc-card-top">
         <span class="kc-code">@Model.Code</span>
-        <span class="kc-time" title="Tiempo transcurrido desde que se envió a cocina">
+        <span class="kc-time @(Model.IsDelayed ? "is-delayed" : "")" title="Tiempo transcurrido desde que se envió a cocina">
             <i class="bi bi-clock"></i>
-            <span data-created-ms="@Model.CreatedAtUnixMs">@Model.ElapsedText</span>
+            <span data-created-ms="@Model.CreatedAtUnixMs">@Model.DisplayElapsedText</span>
         </span>
+    </div>
+
+    @* HU-11: Alerta visual de retraso para pedidos en Nuevos que llevan >= 20 min *@
+    <div class="kc-delay-alert @(Model.IsDelayed ? "" : "d-none")" data-delay-alert>
+        @software_elviejomadero.ViewModels.KitchenOrderViewModel.DelayAlertMessage
     </div>
 
     <div class="kc-origin">

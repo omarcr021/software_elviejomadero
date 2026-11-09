@@ -18,23 +18,25 @@ namespace software_elviejomadero.Controllers
             _salon = salon; _dishes = dishes;
         }
 
-        private async Task<SalonTablesViewModel> BuildBoardAsync() => new()
+        // HU-04: construcción del tablero con soporte de filtro de estado
+        private async Task<SalonTablesViewModel> BuildBoardAsync(string? filter = "Todas") => new()
         {
-            Tables = await _salon.GetTablesAsync(),
+            Tables = await _salon.GetTablesAsync(filter),
             ReadyToServe = await _salon.GetReadyToServeAsync(),
-            Attention = await _salon.GetTableAttentionAsync()
+            Attention = await _salon.GetTableAttentionAsync(),
+            CurrentFilter = string.IsNullOrWhiteSpace(filter) ? "Todas" : filter
         };
 
         [HttpGet]
-        public async Task<IActionResult> Index() => View(await BuildBoardAsync());
+        public async Task<IActionResult> Index(string? filter = "Todas") => View(await BuildBoardAsync(filter));
 
-        // HU-02 (criterio 4): el navegador consulta este fragmento cada pocos segundos
-        // para reflejar los cambios de otros mozos sin recargar la página.
+        // HU-02 (criterio 4) y HU-04 (detalle 4): el navegador consulta este fragmento cada pocos segundos
+        // respetando el filtro actual sin recargar la página.
         [HttpGet]
-        public async Task<IActionResult> Board()
+        public async Task<IActionResult> Board(string? filter = "Todas")
         {
             Response.Headers.CacheControl = "no-store";
-            return PartialView("_Board", await BuildBoardAsync());
+            return PartialView("_Board", await BuildBoardAsync(filter));
         }
 
         // HU-02 y HU-07: detalle de mesa con sus pedidos y consumos.
@@ -133,16 +135,20 @@ namespace software_elviejomadero.Controllers
             return result == null ? NotFound() : View(result);
         }
 
-        // HU-07 CA-02: Servir pedido a la mesa
+        // HU-07 y HU-08: Servir pedido a la mesa
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ServeOrder(int orderId, int? tableId)
         {
             var result = await _salon.ServeOrderAsync(orderId);
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" && tableId.HasValue)
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                var detail = await _salon.GetTableConsumptionAsync(tableId.Value);
-                return detail == null ? NotFound() : PartialView("_TableDetail", detail);
+                if (tableId.HasValue)
+                {
+                    var detail = await _salon.GetTableConsumptionAsync(tableId.Value);
+                    return detail == null ? NotFound() : PartialView("_TableDetail", detail);
+                }
+                return Json(new { succeeded = result.Succeeded, errorMessage = result.ErrorMessage });
             }
 
             TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded

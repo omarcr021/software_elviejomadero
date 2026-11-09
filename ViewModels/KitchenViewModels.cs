@@ -61,7 +61,19 @@ namespace software_elviejomadero.ViewModels
             _ => "Personal de atención"
         };
 
-        public string ElapsedText => FormatElapsed(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - CreatedAtUnixMs);
+        // HU-11: Alerta de retraso en columna Nuevos (tiempo límite: 20 minutos)
+        public const int DelayThresholdMinutes = 20;
+        public const string DelayAlertMessage = "Esta comanda lleva más de 20 minutos en Nuevos. Inicia la preparación.";
+
+        public int ElapsedMinutes => (int)Math.Max(0, (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - CreatedAtUnixMs) / 60000);
+
+        public bool IsDelayed => Status == OrderStatus.Nuevo && ElapsedMinutes >= DelayThresholdMinutes;
+
+        public string DisplayElapsedText => IsDelayed
+            ? $"Demora: {ElapsedMinutes} min"
+            : FormatElapsed(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - CreatedAtUnixMs);
+
+        public string ElapsedText => DisplayElapsedText;
 
         // Misma lógica que formatElapsed() en Index.cshtml
         public static string FormatElapsed(long elapsedMs)
