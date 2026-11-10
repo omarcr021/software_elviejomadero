@@ -53,6 +53,22 @@ namespace software_elviejomadero.Data
                 );
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_DishId"" ON ""OrderItems"" (""DishId"");
                 CREATE INDEX IF NOT EXISTS ""IX_OrderItems_OrderId"" ON ""OrderItems"" (""OrderId"");
+
+                -- HU-13: Avisos de cocina para repartidores
+                CREATE TABLE IF NOT EXISTS ""DeliveryKitchenNotices"" (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_DeliveryKitchenNotices"" PRIMARY KEY AUTOINCREMENT,
+                    ""OrderId"" INTEGER NOT NULL,
+                    ""OrderCode"" TEXT NOT NULL,
+                    ""CustomerName"" TEXT NOT NULL,
+                    ""Title"" TEXT NOT NULL,
+                    ""Message"" TEXT NOT NULL,
+                    ""CreatedAt"" TEXT NOT NULL,
+                    ""IsRead"" INTEGER NOT NULL DEFAULT 0,
+                    ""ReadAt"" TEXT NULL,
+                    CONSTRAINT ""FK_DeliveryKitchenNotices_Orders_OrderId"" FOREIGN KEY (""OrderId"") REFERENCES ""Orders"" (""Id"") ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS ""IX_DeliveryKitchenNotices_OrderId"" ON ""DeliveryKitchenNotices"" (""OrderId"");
+                CREATE INDEX IF NOT EXISTS ""IX_DeliveryKitchenNotices_IsRead"" ON ""DeliveryKitchenNotices"" (""IsRead"");
             ");
 
             // HU-07: asegurar columna IsBilled en RestaurantTables de forma limpia

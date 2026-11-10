@@ -74,14 +74,55 @@
                 <p class="vm-dr-subtitle">Gestiona pedidos listos, rutas activas y entregas.</p>
             </div>
         </div>
-        <div class="vm-dr-counters">
-            <div class="vm-dr-counter">
-                <small>PENDIENTES</small>
-                <strong id="drPending">@Model.Ready.Count</strong>
+        <div class="vm-dr-header-actions">
+            <div class="vm-dr-counters">
+                <div class="vm-dr-counter">
+                    <small>PENDIENTES</small>
+                    <strong id="drPending">@Model.Ready.Count</strong>
+                </div>
+                <div class="vm-dr-counter">
+                    <small>EN RUTA</small>
+                    <strong class="is-route" id="drInRoute">@Model.InRoute.Count</strong>
+                </div>
             </div>
-            <div class="vm-dr-counter">
-                <small>EN RUTA</small>
-                <strong class="is-route" id="drInRoute">@Model.InRoute.Count</strong>
+
+            <!-- HU-13: Campana de avisos de cocina para pedidos de delivery -->
+            <div class="vm-dr-notices-wrapper">
+                <button type="button" class="vm-dr-bell-btn" id="btnNotices" aria-label="Avisos de cocina" aria-expanded="false" title="Avisos de cocina">
+                    <i class="bi bi-bell"></i>
+                    <span class="vm-dr-bell-badge @(Model.UnreadNoticesCount > 0 ? "" : "d-none")" id="noticesBadge">@Model.UnreadNoticesCount</span>
+                </button>
+
+                <!-- Popover flotante: Avisos de cocina -->
+                <div class="vm-dr-notices-popover" id="noticesPopover" style="display: none;" role="region" aria-label="Avisos de cocina">
+                    <div class="vm-dr-notices-head">
+                        <strong class="vm-dr-notices-title">Avisos de cocina</strong>
+                        <span class="vm-dr-notices-tag">Solo delivery</span>
+                    </div>
+                    <div class="vm-dr-notices-list" id="noticesList">
+                        @if (Model.Notices.Count == 0)
+                        {
+                            <div class="vm-dr-notice-empty">No hay avisos de cocina por ahora.</div>
+                        }
+                        else
+                        {
+                            @foreach (var notice in Model.Notices)
+                            {
+                                <div class="vm-dr-notice-item @(notice.IsRead ? "is-read" : "is-unread")" data-notice-id="@notice.Id">
+                                    <div class="vm-dr-notice-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi" viewBox="0 0 16 16">
+                                            <path d="M5 1a2.5 2.5 0 0 0-2.5 2.5c0 .35.07.69.2 1A2.5 2.5 0 0 0 1 7a2.5 2.5 0 0 0 2.2 2.48A2 2 0 0 0 5 11h6a2 2 0 0 0 1.8-1.52A2.5 2.5 0 0 0 15 7a2.5 2.5 0 0 0-1.7-2.5c.13-.31.2-.65.2-1A2.5 2.5 0 0 0 11 1c-.96 0-1.8.54-2.22 1.33A2.5 2.5 0 0 0 5 1zM4 12v1.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V12H4z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="vm-dr-notice-content">
+                                        <strong class="vm-dr-notice-item-title">@notice.Title</strong>
+                                        <p class="vm-dr-notice-item-msg">@notice.Message</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -368,6 +409,122 @@
                 }
             }
         });
+    });
+
+    // HU-13: Avisos de cocina para pedidos de delivery
+    const btnNotices = document.getElementById('btnNotices');
+    const noticesPopover = document.getElementById('noticesPopover');
+    const noticesBadge = document.getElementById('noticesBadge');
+    const noticesList = document.getElementById('noticesList');
+    const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+    const token = tokenEl ? tokenEl.value : '';
+    const NOTICES_POLL_MS = 4000;
+    let isPopoverOpen = false;
+    let unreadCount = Number('@Model.UnreadNoticesCount');
+
+    function updateBadge(count) {
+        unreadCount = count;
+        if (!noticesBadge) return;
+        if (count > 0) {
+            noticesBadge.textContent = count;
+            noticesBadge.classList.remove('d-none');
+        } else {
+            noticesBadge.textContent = '0';
+            noticesBadge.classList.add('d-none');
+        }
+    }
+
+    function renderNotices(notices) {
+        if (!noticesList) return;
+        if (!notices || notices.length === 0) {
+            noticesList.innerHTML = '<div class="vm-dr-notice-empty">No hay avisos de cocina por ahora.</div>';
+            return;
+        }
+
+        noticesList.innerHTML = notices.map(n => `
+            <div class="vm-dr-notice-item ${n.isRead ? 'is-read' : 'is-unread'}" data-notice-id="${n.id}">
+                <div class="vm-dr-notice-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi" viewBox="0 0 16 16">
+                        <path d="M5 1a2.5 2.5 0 0 0-2.5 2.5c0 .35.07.69.2 1A2.5 2.5 0 0 0 1 7a2.5 2.5 0 0 0 2.2 2.48A2 2 0 0 0 5 11h6a2 2 0 0 0 1.8-1.52A2.5 2.5 0 0 0 15 7a2.5 2.5 0 0 0-1.7-2.5c.13-.31.2-.65.2-1A2.5 2.5 0 0 0 11 1c-.96 0-1.8.54-2.22 1.33A2.5 2.5 0 0 0 5 1zM4 12v1.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V12H4z"/>
+                    </svg>
+                </div>
+                <div class="vm-dr-notice-content">
+                    <strong class="vm-dr-notice-item-title">${escapeHtml(n.title)}</strong>
+                    <p class="vm-dr-notice-item-msg">${escapeHtml(n.message)}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    async function pollNotices() {
+        if (document.hidden) return;
+        try {
+            const res = await fetch('@Url.Action("GetNoticesSummary", "DeliveryRoute")', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (!isPopoverOpen) {
+                    updateBadge(data.unreadCount || 0);
+                }
+                renderNotices(data.notices || []);
+            }
+        } catch { /* reintenta en el próximo ciclo */ }
+    }
+
+    setInterval(pollNotices, NOTICES_POLL_MS);
+
+    async function markAsRead() {
+        if (unreadCount <= 0) return;
+        updateBadge(0);
+        try {
+            const formData = new URLSearchParams();
+            if (token) formData.append('__RequestVerificationToken', token);
+            await fetch('@Url.Action("MarkNoticesAsRead", "DeliveryRoute")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            });
+        } catch { /* error silencioso */ }
+    }
+
+    function togglePopover(show) {
+        isPopoverOpen = (show !== undefined) ? show : !isPopoverOpen;
+        if (noticesPopover) {
+            noticesPopover.style.display = isPopoverOpen ? 'block' : 'none';
+        }
+        if (btnNotices) {
+            btnNotices.setAttribute('aria-expanded', String(isPopoverOpen));
+        }
+
+        // HU-13 CA-03: al cerrar la ventana, se marcan como leídos y se retira el contador de la campana
+        if (!isPopoverOpen) {
+            markAsRead();
+        }
+    }
+
+    if (btnNotices) {
+        btnNotices.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePopover();
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (isPopoverOpen && noticesPopover && !noticesPopover.contains(e.target) && !btnNotices.contains(e.target)) {
+            togglePopover(false);
+        }
     });
 })();
 </script>

@@ -165,5 +165,68 @@ namespace software_elviejomadero.Tests
             var detail = await service.GetTableConsumptionAsync(1);
             Assert.True(detail!.IsFree);
         }
+
+        [Fact]
+        public async Task AdditionalOrder_OnOccupiedTable_ControllerNew_ReturnsViewSuccessfully()
+        {
+            using var db = Context();
+            var salonService = new SalonOrderService(db, new OrderService(db));
+            var dishService = new DishService(db, new Microsoft.Extensions.Logging.Abstractions.NullLogger<DishService>());
+            var controller = new Controllers.SalonOrderController(salonService, dishService)
+            {
+                ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext
+                {
+                    HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext()
+                }
+            };
+
+            // Ocupar Mesa 1 con un pedido inicial
+            var req = CreateOrderRequest(1, "Genesis", false, (10, 1));
+            var res = await salonService.CreateAsync(req, "waiter1");
+            Assert.True(res.Succeeded);
+
+            // Al seleccionar "Agregar pedido a esta mesa" (con o sin flag additional)
+            var actionResult1 = await controller.New(1, additional: true);
+            var viewResult1 = Assert.IsType<Microsoft.AspNetCore.Mvc.ViewResult>(actionResult1);
+            var model1 = Assert.IsType<SalonNewOrderViewModel>(viewResult1.Model);
+            Assert.Equal(1, model1.TableId);
+            Assert.True(model1.IsAdditionalOrder);
+            Assert.Equal("Genesis", model1.CustomerName);
+
+            // Incluso si additional no vino explícito en query string
+            var actionResult2 = await controller.New(1, additional: false);
+            var viewResult2 = Assert.IsType<Microsoft.AspNetCore.Mvc.ViewResult>(actionResult2);
+            var model2 = Assert.IsType<SalonNewOrderViewModel>(viewResult2.Model);
+            Assert.Equal(1, model2.TableId);
+            Assert.True(model2.IsAdditionalOrder);
+        }
+
+        [Fact]
+        public async Task AdditionalOrder_OnOccupiedTable_SubmitsAsNewOrderToKitchen()
+        {
+            using var db = Context();
+            var salonService = new SalonOrderService(db, new OrderService(db));
+
+            // Mesa 1 ocupada con Pedido 1
+            var req1 = CreateOrderRequest(1, "Mario", false, (10, 1));
+            var res1 = await salonService.CreateAsync(req1, "waiter1");
+            Assert.True(res1.Succeeded);
+            var orderId1 = res1.CreatedOrder!.Id;
+
+            // Enviar un nuevo pedido adicional a la misma mesa (con IsAdditionalOrder = true del formulario)
+            var req2 = CreateOrderRequest(1, "Mario", true, (11, 1));
+            var res2 = await salonService.CreateAsync(req2, "waiter1");
+            Assert.True(res2.Succeeded, res2.ErrorMessage);
+            var orderId2 = res2.CreatedOrder!.Id;
+
+            Assert.NotEqual(orderId1, orderId2);
+            Assert.Equal(OrderStatuses.InKitchen, res2.CreatedOrder.Status);
+
+            // Ambos pedidos aparecen en el detalle de la mesa
+            var consumption = await salonService.GetTableConsumptionAsync(1);
+            Assert.NotNull(consumption);
+            Assert.Equal(2, consumption!.Orders.Count);
+            Assert.Equal(66m, consumption.Total); // 24 + 42 = 66
+        }
     }
 }

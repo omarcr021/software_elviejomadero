@@ -345,7 +345,7 @@
                 ready: '@Url.Action("MarkAsReady", "Kitchen")'
             };
 
-            const POLL_MS = 8000;
+            const POLL_MS = 4000;
             let serverOffset = 0;
             let busy = false;
 
@@ -359,6 +359,37 @@
             function syncOffset() {
                 const root = board.querySelector('[data-server-now]');
                 if (root) serverOffset = Number(root.dataset.serverNow) - Date.now();
+            }
+
+            // HU-10 CA-02, CA-03, CA-04 y Detalle 3: mantener las tarjetas ordenadas por tiempo de espera
+            // (mayor tiempo de espera / CreatedAt más antiguo primero, desempate por orden de registro Id).
+            function ensureColumnOrder() {
+                board.querySelectorAll('.kc-column').forEach(function (col) {
+                    const cards = Array.from(col.querySelectorAll('.kc-card'));
+                    if (cards.length <= 1) return;
+                    let sorted = true;
+                    for (let i = 0; i < cards.length - 1; i++) {
+                        const aMs = Number(cards[i].querySelector('[data-created-ms]')?.dataset.createdMs || 0);
+                        const bMs = Number(cards[i + 1].querySelector('[data-created-ms]')?.dataset.createdMs || 0);
+                        const aId = Number(cards[i].dataset.orderId || 0);
+                        const bId = Number(cards[i + 1].dataset.orderId || 0);
+                        if (aMs > bMs || (aMs === bMs && aId > bId)) {
+                            sorted = false;
+                            break;
+                        }
+                    }
+                    if (!sorted) {
+                        cards.sort(function (a, b) {
+                            const aMs = Number(a.querySelector('[data-created-ms]')?.dataset.createdMs || 0);
+                            const bMs = Number(b.querySelector('[data-created-ms]')?.dataset.createdMs || 0);
+                            if (aMs !== bMs) return aMs - bMs;
+                            const aId = Number(a.dataset.orderId || 0);
+                            const bId = Number(b.dataset.orderId || 0);
+                            return aId - bId;
+                        });
+                        cards.forEach(function (c) { col.appendChild(c); });
+                    }
+                });
             }
 
             function tick() {
@@ -395,6 +426,8 @@
                         }
                     }
                 });
+
+                ensureColumnOrder();
             }
 
             function setLive(ok) {

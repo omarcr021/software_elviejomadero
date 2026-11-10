@@ -100,5 +100,82 @@ namespace software_elviejomadero.Tests
             await db.SaveChangesAsync();
             Assert.Empty(await service.GetTableAttentionAsync());
         }
+
+        [Fact]
+        public async Task CA02_MultipleActiveOrders_AccumulateTotalConsumptionAndKeepInitialSendTime()
+        {
+            using var db = Context();
+            var service = new SalonOrderService(db, new OrderService(db));
+
+            // Primer pedido enviado a cocina hace 10 minutos
+            var initialSendTime = DateTime.UtcNow.AddMinutes(-10);
+            var table = await db.RestaurantTables.FindAsync(1);
+            table!.Status = TableStatuses.Occupied;
+
+            var order1 = new Order
+            {
+                OrderCode = "#M1-01",
+                OrderType = OrderTypes.DineIn,
+                TableId = 1,
+                Status = OrderStatuses.InKitchen,
+                TotalAmount = 50m,
+                EstimatedServiceMinutes = 20,
+                CreatedAt = initialSendTime,
+                CustomerName = "Carlos"
+            };
+
+            // Segundo pedido enviado a cocina hace 2 minutos
+            var order2 = new Order
+            {
+                OrderCode = "#M1-02",
+                OrderType = OrderTypes.DineIn,
+                TableId = 1,
+                Status = OrderStatuses.InKitchen,
+                TotalAmount = 30m,
+                EstimatedServiceMinutes = 15,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-2),
+                CustomerName = "Carlos"
+            };
+
+            db.Orders.AddRange(order1, order2);
+            await db.SaveChangesAsync();
+
+            var attentions = await service.GetTableAttentionAsync();
+            var attention = Assert.Single(attentions);
+
+            Assert.Equal(1, attention.TableId);
+            // El consumo total de la mesa suma todos sus pedidos activos: 50 + 30 = 80
+            Assert.Equal(80m, attention.TotalConsumption);
+            // El tiempo transcurrido cuenta desde el primer envío a cocina
+            Assert.Equal(DateTime.SpecifyKind(initialSendTime, DateTimeKind.Utc), attention.SentToKitchenAtUtc);
+        }
+
+        [Fact]
+        public async Task CA03_SalonOrderController_Board_IncludesAttentionInViewModel()
+        {
+            using var db = Context();
+            var salonService = new SalonOrderService(db, new OrderService(db));
+            var dishService = new DishService(db, new Microsoft.Extensions.Logging.Abstractions.NullLogger<DishService>());
+            var controller = new Controllers.SalonOrderController(salonService, dishService)
+            {
+                ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext
+                {
+                    HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext()
+                }
+            };
+
+            var created = await salonService.CreateAsync(Request((1, 2)), "mozo");
+            Assert.True(created.Succeeded);
+
+            var actionResult = await controller.Board("Todas");
+            var partialView = Assert.IsType<Microsoft.AspNetCore.Mvc.PartialViewResult>(actionResult);
+            var model = Assert.IsType<SalonTablesViewModel>(partialView.Model);
+
+            Assert.NotEmpty(model.Attention);
+            var tableAttention = model.Attention.FirstOrDefault(a => a.TableId == 1);
+            Assert.NotNull(tableAttention);
+            Assert.Equal(30, tableAttention.EstimatedServiceMinutes); // 15 min * 2 = 30
+            Assert.Equal(48m, tableAttention.TotalConsumption);      // 24 * 2 = 48
+        }
     }
 }

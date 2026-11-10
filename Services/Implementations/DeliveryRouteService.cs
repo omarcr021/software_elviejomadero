@@ -59,7 +59,10 @@ namespace software_elviejomadero.Services.Implementations
                 InRoute = orders.Where(o => o.Status == OrderStatuses.OnTheWay).Select(ToCard).ToList(),
                 History = orders.Where(o => o.Status == OrderStatuses.Delivered)
                     .OrderByDescending(o => o.DeliveredAt ?? o.CreatedAt)
-                    .Select(ToCard).ToList()
+                    .Select(ToCard).ToList(),
+                // HU-13: Avisos de cocina para pedidos de delivery
+                UnreadNoticesCount = await GetUnreadNoticesCountAsync(),
+                Notices = await GetKitchenNoticesAsync()
             };
         }
 
@@ -139,6 +142,56 @@ namespace software_elviejomadero.Services.Implementations
             catch (DbUpdateConcurrencyException)
             {
                 return (false, "Este pedido ya cambió de estado. Actualiza la pantalla.");
+            }
+        }
+
+        // HU-13: Avisos de cocina para pedidos de delivery
+        public async Task<List<DeliveryKitchenNoticeViewModel>> GetKitchenNoticesAsync()
+        {
+            var now = DateTime.UtcNow;
+            var notices = await _context.DeliveryKitchenNotices
+                .AsNoTracking()
+                .OrderByDescending(n => n.CreatedAt)
+                .ThenByDescending(n => n.Id)
+                .ToListAsync();
+
+            return notices.Select(n =>
+            {
+                var diffMinutes = (int)Math.Max(0, (now - n.CreatedAt).TotalMinutes);
+                var timeText = diffMinutes < 1 ? "recién" : (diffMinutes < 60 ? $"hace {diffMinutes} min" : $"hace {diffMinutes / 60} h");
+
+                return new DeliveryKitchenNoticeViewModel
+                {
+                    Id = n.Id,
+                    OrderId = n.OrderId,
+                    OrderCode = n.OrderCode,
+                    CustomerName = n.CustomerName,
+                    Title = n.Title,
+                    Message = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    TimeAgoText = timeText
+                };
+            }).ToList();
+        }
+
+        public async Task<int> GetUnreadNoticesCountAsync()
+        {
+            return await _context.DeliveryKitchenNotices.CountAsync(n => !n.IsRead);
+        }
+
+        public async Task MarkNoticesAsReadAsync()
+        {
+            var unread = await _context.DeliveryKitchenNotices.Where(n => !n.IsRead).ToListAsync();
+            if (unread.Count > 0)
+            {
+                var now = DateTime.UtcNow;
+                foreach (var notice in unread)
+                {
+                    notice.IsRead = true;
+                    notice.ReadAt = now;
+                }
+                await _context.SaveChangesAsync();
             }
         }
     }

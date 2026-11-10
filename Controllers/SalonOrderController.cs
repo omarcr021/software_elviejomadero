@@ -49,29 +49,28 @@ namespace software_elviejomadero.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> New(int tableId, bool additional = false)
+        public async Task<IActionResult> New(int tableId = 0, int? id = null, bool additional = false)
         {
-            if (additional)
+            var effectiveTableId = tableId > 0 ? tableId : (id ?? 0);
+            if (effectiveTableId <= 0)
             {
-                var addModel = await _salon.GetNewOrderForTableAsync(tableId);
-                if (addModel == null)
-                {
-                    TempData["ErrorMessage"] = "La mesa no existe.";
-                    return RedirectToAction(nameof(Index));
-                }
-                return View(await BuildNewOrderModelAsync(addModel));
-            }
-
-            var table = await _salon.GetAvailableTableAsync(tableId);
-            if (table == null)
-            {
-                TempData["ErrorMessage"] = "La mesa está ocupada o no existe.";
+                TempData["ErrorMessage"] = "No se especificó la mesa.";
                 return RedirectToAction(nameof(Index));
             }
-            return View(await BuildNewOrderModelAsync(new SalonNewOrderViewModel
+
+            var model = await _salon.GetNewOrderForTableAsync(effectiveTableId);
+            if (model == null)
             {
-                TableId = table.Id, TableNumber = table.Number
-            }));
+                TempData["ErrorMessage"] = "La mesa no existe.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (additional)
+            {
+                model.IsAdditionalOrder = true;
+            }
+
+            return View(await BuildNewOrderModelAsync(model));
         }
 
         // HU-02 (criterio 3): agregar más platos al pedido de una mesa ocupada.

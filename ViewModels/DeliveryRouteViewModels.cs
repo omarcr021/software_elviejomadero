@@ -40,6 +40,24 @@ namespace software_elviejomadero.ViewModels
         public List<DispatchOrderViewModel> History { get; set; } = new();
         // HU-12: "Despacho activo" = Listo para despacho + En camino.
         public IEnumerable<DispatchOrderViewModel> Active => Ready.Concat(InRoute);
+
+        // HU-13: Avisos de cocina para pedidos de delivery
+        public int UnreadNoticesCount { get; set; }
+        public List<DeliveryKitchenNoticeViewModel> Notices { get; set; } = new();
+    }
+
+    // HU-13: Modelo para los avisos de cocina en la pantalla de despacho
+    public class DeliveryKitchenNoticeViewModel
+    {
+        public int Id { get; set; }
+        public int OrderId { get; set; }
+        public string OrderCode { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public bool IsRead { get; set; }
+        public string TimeAgoText { get; set; } = string.Empty;
     }
 
     public class ConfirmDeliveryInputModel

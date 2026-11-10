@@ -17,6 +17,8 @@ namespace software_elviejomadero.Services.Implementations
 
         public async Task<KitchenBoardViewModel> GetBoardAsync()
         {
+            // HU-10 CA-02, CA-03 y Detalles 1-3: ordenar por tiempo de espera (CreatedAt asc = mayor tiempo primero)
+            // y desempate por orden/hora de envío (Id asc). Aplica para Nuevos y En preparación.
             var orders = await _context.Orders
                 .AsNoTracking()
                 .Include(o => o.Items)
@@ -104,6 +106,22 @@ namespace software_elviejomadero.Services.Implementations
             order.Status = OrderStatuses.InPreparation;
             order.PreparationStartedAt = DateTime.UtcNow;
             order.PreparedByUserId = cookUserId;
+
+            // HU-13 CA-01 y Detalle 1: Solo se generan avisos para los pedidos de delivery
+            if (order.OrderType == OrderTypes.Delivery)
+            {
+                var notice = new DeliveryKitchenNotice
+                {
+                    OrderId = order.Id,
+                    OrderCode = order.OrderCode,
+                    CustomerName = order.CustomerName,
+                    Title = $"Pedido {(order.OrderCode.StartsWith("#") ? order.OrderCode : $"#{order.OrderCode}")} en preparación",
+                    Message = $"Cocina comenzó a preparar el delivery de {order.CustomerName}.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _context.DeliveryKitchenNotices.Add(notice);
+            }
 
             try
             {

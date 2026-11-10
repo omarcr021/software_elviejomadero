@@ -72,9 +72,9 @@ namespace software_elviejomadero.Services.Implementations
                 return new SalonTableAttentionViewModel
                 {
                     TableId = g.Key,
-                    TotalConsumption = order.TotalAmount,
+                    TotalConsumption = g.Sum(x => x.TotalAmount),
                     EstimatedServiceMinutes = order.EstimatedServiceMinutes,
-                    SentToKitchenAtUtc = DateTime.SpecifyKind(order.CreatedAt, DateTimeKind.Utc)
+                    SentToKitchenAtUtc = DateTime.SpecifyKind(g.Min(x => x.CreatedAt), DateTimeKind.Utc)
                 };
             }).ToList();
         }

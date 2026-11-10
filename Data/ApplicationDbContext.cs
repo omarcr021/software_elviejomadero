@@ -16,6 +16,8 @@ namespace software_elviejomadero.Data
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<RestaurantTable> RestaurantTables => Set<RestaurantTable>();
+        // HU-13: Avisos de cocina para repartidores
+        public DbSet<DeliveryKitchenNotice> DeliveryKitchenNotices => Set<DeliveryKitchenNotice>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

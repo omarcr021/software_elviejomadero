@@ -8,5 +8,10 @@ namespace software_elviejomadero.Services.Interfaces
         Task<(bool Succeeded, string? ErrorMessage)> StartRouteAsync(int orderId, string driverId);
         Task<(bool Succeeded, string? ErrorMessage)> ConfirmDeliveryAsync(int orderId, string driverId, string? deliveryNote);
         Task<(bool Succeeded, string? ErrorMessage)> MarkReadyForDispatchAsync(int orderId);
+
+        // HU-13: Avisos de cocina para pedidos de delivery
+        Task<List<DeliveryKitchenNoticeViewModel>> GetKitchenNoticesAsync();
+        Task<int> GetUnreadNoticesCountAsync();
+        Task MarkNoticesAsReadAsync();
     }
 }

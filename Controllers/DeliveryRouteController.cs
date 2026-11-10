@@ -41,5 +41,24 @@ namespace software_elviejomadero.Controllers
                 : result.ErrorMessage;
             return RedirectToAction(nameof(Index));
         }
+
+        // HU-13 CA-01 y Detalle 2: Polling en tiempo real de avisos de cocina para pedidos de delivery
+        [HttpGet]
+        public async Task<IActionResult> GetNoticesSummary()
+        {
+            Response.Headers.CacheControl = "no-store";
+            var unreadCount = await _routes.GetUnreadNoticesCountAsync();
+            var notices = await _routes.GetKitchenNoticesAsync();
+            return Json(new { unreadCount, notices });
+        }
+
+        // HU-13 CA-03: Al cerrar la ventana, se marcan como leídos y se retira el contador
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkNoticesAsRead()
+        {
+            await _routes.MarkNoticesAsReadAsync();
+            return Json(new { success = true, succeeded = true });
+        }
     }
 }

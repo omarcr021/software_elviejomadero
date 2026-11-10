@@ -1,17 +1,18 @@
 @model software_elviejomadero.ViewModels.SalonNewOrderViewModel
 @{
-    ViewData["Title"] = Model.AddToExisting ? "Agregar platos" : "Pedido del salón";
+    ViewData["Title"] = Model.AddToExisting ? "Agregar platos" : (Model.IsAdditionalOrder ? "Nuevo pedido a la mesa" : "Pedido del salón");
     var tableLabel = software_elviejomadero.ViewModels.TableLabels.Format(Model.TableNumber);
 }
 <div class="vm-admin-wrapper">
     <div class="mb-3"><a asp-action="Index" class="text-decoration-none text-madero"><i class="bi bi-arrow-left"></i> Volver a mesas</a></div>
     <div class="vm-admin-header">
         <div><h1 class="vm-page-title">@tableLabel <span class="vm-tag-salon">Salón</span></h1>
-            <p class="vm-page-subtitle">@(Model.AddToExisting ? $"Agrega más platos al pedido {Model.OrderCode} de {Model.CustomerName}." : "Revisa los platos del cliente antes de enviarlos a cocina.")</p></div>
+            <p class="vm-page-subtitle">@(Model.AddToExisting ? $"Agrega más platos al pedido {Model.OrderCode} de {Model.CustomerName}." : (Model.IsAdditionalOrder ? $"Registra un nuevo pedido para {tableLabel} y envíalo a cocina." : "Revisa los platos del cliente antes de enviarlos a cocina."))</p></div>
     </div>
     <form id="salonForm" asp-controller="SalonOrder" asp-action="@(Model.AddToExisting ? "AddItems" : "Create")" method="post" autocomplete="off">
         @Html.AntiForgeryToken()
         <input type="hidden" name="TableId" value="@Model.TableId" />
+        <input type="hidden" name="IsAdditionalOrder" value="@(Model.IsAdditionalOrder ? "true" : "false")" />
         <div class="vm-field-group vm-salon-customer">
             <label class="vm-modal-label" for="salonCustomerName">Nombre del cliente</label>
             <input id="salonCustomerName" class="vm-modal-input" name="CustomerName" required maxlength="120" placeholder="Ej: Juan" value="@Model.CustomerName" readonly="@Model.AddToExisting" />
