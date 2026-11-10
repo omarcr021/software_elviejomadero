@@ -48,6 +48,13 @@
     /* Tarjeta de pedido */
     .kc-card { background: var(--kc-card); border: 1px solid var(--kc-card-border); border-radius: 12px; padding: .9rem 1rem; margin-bottom: .75rem; box-shadow: 0 1px 2px rgba(60, 40, 20, .06); }
     .kc-card:last-child { margin-bottom: 0; }
+
+    /* HU-11: alerta de demora en "Nuevos" */
+    .kc-card-delayed { border-color: #d9605a; background: #f5e6e0; }
+    .kc-card-delayed .kc-time { color: #c0392b; font-weight: 700; }
+    .kc-delay-msg { display: none; background: #efd3ca; color: #c0392b; font-size: .78rem; font-weight: 700; line-height: 1.35; padding: .55rem .7rem; border-radius: 8px; margin-bottom: .7rem; }
+    .kc-card-delayed .kc-delay-msg { display: block; }
+
     .kc-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .55rem; }
     .kc-code { font-family: var(--kc-serif); font-weight: 700; font-size: 1.1rem; color: var(--kc-ink); }
     .kc-time { font-size: .78rem; color: var(--kc-muted); white-space: nowrap; display: inline-flex; align-items: center; gap: .3rem; }
@@ -113,6 +120,7 @@
             };
 
             const POLL_MS = 8000;
+            const DELAY_LIMIT_MIN = 20;   // HU-11: límite en "Nuevos" antes de alertar
             let serverOffset = 0;   // servidor - navegador, en ms
             let busy = false;
 
@@ -152,11 +160,28 @@
                 });
             }
 
+            // HU-11: las comandas de "Nuevos" que superan el límite se resaltan y su etiqueta de tiempo
+            // pasa a "Demora: N min" (minutos acumulados desde que se envió a cocina).
+            // Debe ejecutarse DESPUÉS de actualizar los tiempos en tick().
+            function updateDelays(now) {
+                board.querySelectorAll('.kc-card[data-delay-check]').forEach(function (card) {
+                    const elapsed = now - createdMsOf(card);
+                    const delayed = elapsed > DELAY_LIMIT_MIN * 60000;
+
+                    card.classList.toggle('kc-card-delayed', delayed);
+                    if (delayed) {
+                        const label = card.querySelector('[data-created-ms]');
+                        if (label) label.textContent = 'Demora: ' + Math.floor(elapsed / 60000) + ' min';
+                    }
+                });
+            }
+
             function tick() {
                 const now = Date.now() + serverOffset;
                 board.querySelectorAll('[data-created-ms]').forEach(function (el) {
                     el.textContent = formatElapsed(now - Number(el.dataset.createdMs));
                 });
+                updateDelays(now);   // HU-11
                 sortColumns();
             }
 

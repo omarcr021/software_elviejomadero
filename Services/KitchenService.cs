@@ -39,6 +39,8 @@ namespace software_elviejomadero.Services
                     Note = o.Note,
                     Status = o.Status,
                     CreatedAt = o.CreatedAt,
+                    PreparationStartedAt = o.PreparationStartedAt,   // cada columna cuenta su tiempo desde cero
+                    ReadyAt = o.ReadyAt,
                     Items = o.Items
                         .OrderBy(i => i.Id)
                         .Select(i => new KitchenOrderItemViewModel

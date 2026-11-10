@@ -1,14 +1,21 @@
 @using software_elviejomadero.Models
 @model software_elviejomadero.ViewModels.KitchenOrderViewModel
 
-<article class="kc-card" data-order-id="@Model.Id">
+<article class="kc-card" data-order-id="@Model.Id" data-delay-check="@(Model.Status == OrderStatus.Nuevo ? "true" : null)">
     <div class="kc-card-top">
         <span class="kc-code">@Model.Code</span>
-        <span class="kc-time" title="Tiempo transcurrido desde que se envió a cocina">
+        @* El tiempo se cuenta desde que el pedido entró a su columna actual (cada columna reinicia en 0) *@
+        <span class="kc-time" title="@(Model.Status == OrderStatus.Nuevo ? "Tiempo desde que se envió a cocina" : Model.Status == OrderStatus.EnPreparacion ? "Tiempo desde que empezó la preparación" : "Tiempo desde que se marcó como listo")">
             <i class="bi bi-clock"></i>
-            <span data-created-ms="@Model.CreatedAtUnixMs">@Model.ElapsedText</span>
+            <span data-created-ms="@Model.StageStartedAtUnixMs">@Model.ElapsedText</span>
         </span>
     </div>
+
+    @if (Model.Status == OrderStatus.Nuevo)
+    {
+        @* HU-11: mensaje de demora. Oculto por defecto; el script lo muestra al superar el límite. *@
+        <div class="kc-delay-msg" role="status">Esta comanda lleva más de 20 minutos en Nuevos. Inicia la preparación.</div>
+    }
 
     <div class="kc-origin">
         <span class="kc-origin-label">
